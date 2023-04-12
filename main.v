@@ -1,4 +1,4 @@
-// Copyright (C) 2021  Intel Corporation. All rights reserved.
+// Copyright (C) 2022  Intel Corporation. All rights reserved.
 // Your use of Intel Corporation's design tools, logic functions 
 // and other software and tools, and any partner logic 
 // functions, and any output files from any of the foregoing 
@@ -14,14 +14,18 @@
 // https://fpgasoftware.intel.com/eula.
 
 // PROGRAM		"Quartus Prime"
-// VERSION		"Version 21.1.0 Build 842 10/21/2021 SJ Lite Edition"
-// CREATED		"Fri Nov 25 16:47:37 2022"
+// VERSION		"Version 21.1.1 Build 850 06/23/2022 SJ Lite Edition"
+// CREATED		"Wed Apr 12 20:58:18 2023"
 
 module main(
 	MAX10_CLK1_50,
 	KEY,
 	VGA_HS,
 	VGA_VS,
+	HEX0,
+	HEX1,
+	HEX2,
+	HEX3,
 	VGA_B,
 	VGA_G,
 	VGA_R
@@ -32,17 +36,28 @@ input wire	MAX10_CLK1_50;
 input wire	[1:0] KEY;
 output wire	VGA_HS;
 output wire	VGA_VS;
+output wire	[7:0] HEX0;
+output wire	[7:0] HEX1;
+output wire	[7:0] HEX2;
+output wire	[7:0] HEX3;
 output wire	[3:0] VGA_B;
 output wire	[3:0] VGA_G;
 output wire	[3:0] VGA_R;
 
 wire	[15:0] addr;
 wire	clk;
+wire	clk_uart;
 wire	[7:0] data;
 wire	n_reset;
-wire	SYNTHESIZED_WIRE_0;
-wire	SYNTHESIZED_WIRE_1;
+wire	uart_rx;
+wire	uart_tx;
+wire	SYNTHESIZED_WIRE_6;
+wire	[7:0] SYNTHESIZED_WIRE_1;
+wire	[7:0] SYNTHESIZED_WIRE_3;
+wire	SYNTHESIZED_WIRE_4;
+wire	SYNTHESIZED_WIRE_5;
 
+assign	SYNTHESIZED_WIRE_6 = 1;
 
 
 
@@ -51,14 +66,33 @@ CPU	b2v_CPU0(
 	.clk(clk),
 	.n_reset(n_reset),
 	.data_bus(data),
-	.RW(SYNTHESIZED_WIRE_0),
-	.addr_bus(addr)
-	);
+	.RW(SYNTHESIZED_WIRE_4),
+	.addr_bus(addr),
+	
+	.dbg_A_val(SYNTHESIZED_WIRE_1),
+	.dbg_IR_val(SYNTHESIZED_WIRE_3));
+
+
+hex_decoder	b2v_hex_A(
+	.dot(SYNTHESIZED_WIRE_6),
+	.data(SYNTHESIZED_WIRE_1),
+	.disp_high(HEX3),
+	.disp_low(HEX2));
+
+
+hex_decoder	b2v_hex_IR(
+	.dot(SYNTHESIZED_WIRE_6),
+	.data(SYNTHESIZED_WIRE_3),
+	.disp_high(HEX1),
+	.disp_low(HEX0));
+
+
+assign	clk =  ~KEY[1];
 
 
 RAM	b2v_ram0(
 	.mem_clk(clk),
-	.RW(SYNTHESIZED_WIRE_0),
+	.RW(SYNTHESIZED_WIRE_4),
 	.addr(addr),
 	.data(data)
 	);
@@ -70,8 +104,15 @@ ROM	b2v_rom0(
 	.data(data));
 
 
+UART	b2v_uart1(
+	.clk(clk_uart),
+	.n_reset(n_reset),
+	.rx(uart_rx)
+	);
+
+
 VGA	b2v_VGA0(
-	.clk_20MHz(SYNTHESIZED_WIRE_1),
+	.clk_20MHz(SYNTHESIZED_WIRE_5),
 	.n_reset(n_reset),
 	
 	
@@ -86,11 +127,11 @@ VGA	b2v_VGA0(
 
 pll	b2v_vga_pll(
 	.inclk0(MAX10_CLK1_50),
-	.c0(SYNTHESIZED_WIRE_1)
-	);
+	.c0(SYNTHESIZED_WIRE_5),
+	
+	.c2(clk_uart));
 
 assign	n_reset = KEY[0];
-assign	clk = KEY[1];
 assign	n_reset = KEY[0];
 
 endmodule
