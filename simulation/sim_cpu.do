@@ -33,15 +33,15 @@ add wave -position insertpoint -color "red" -label "IR val" sim:/main/b2v_CPU0/I
 
 
 add wave -position insertpoint -color "coral" -label "side_bus" sim:/main/b2v_CPU0/side_bus
-add wave -position insertpoint -color "coral" -label "data2sb_pass" sim:/main/b2v_CPU0/data2sb_pass
+#add wave -position insertpoint -color "coral" -label "data2sb_pass" sim:/main/b2v_CPU0/data2sb_pass
 add wave -position insertpoint -color "coral" -label "sb2data_pass" sim:/main/b2v_CPU0/sb2data_pass
 
 #add wave -position insertpoint -color "gold" -label "mem_indirect" sim:/main/b2v_CPU0/mem_indirect
 #add wave -position insertpoint -color "gold" -label "data_in_force" sim:/main/b2v_CPU0/data_in_force
-add wave -position insertpoint -color "gold" -label "ram_mem_cycle" sim:/main/b2v_CPU0/ram_mem_cycle
+add wave -position insertpoint -color "gold" -label "tim_work_cycle" sim:/main/b2v_CPU0/tim_work_cycle
 
 #add wave -position insertpoint -color "violet" -label "reg_read" sim:/main/b2v_CPU0/reg_read
-add wave -position insertpoint -color "violet" -label "reg_write" sim:/main/b2v_CPU0/reg_write
+add wave -position insertpoint -color "violet" -label "tim_writeback" sim:/main/b2v_CPU0/tim_writeback
 
 add wave -position insertpoint -color "violet" -label "from_A" sim:/main/b2v_CPU0/from_A
 add wave -position insertpoint -color "violet" -label "to_A" sim:/main/b2v_CPU0/to_A
@@ -59,9 +59,9 @@ add wave -position insertpoint -color "violet" -label "X val" sim:/main/b2v_CPU0
 #add wave -position insertpoint -color "violet" -label "to_Y" sim:/main/b2v_CPU0/to_Y
 add wave -position insertpoint -color "violet" -label "Y val" sim:/main/b2v_CPU0/Y_reg/value
 
-#add wave -position insertpoint -color "violet" -label "from_S" sim:/main/b2v_CPU0/from_S
-#add wave -position insertpoint -color "violet" -label "to_S" sim:/main/b2v_CPU0/to_S
-#add wave -position insertpoint -color "violet" -label "S val" sim:/main/b2v_CPU0/S_reg/value
+add wave -position insertpoint -color "violet" -label "from_S" sim:/main/b2v_CPU0/from_S
+add wave -position insertpoint -color "violet" -label "to_S" sim:/main/b2v_CPU0/to_S
+add wave -position insertpoint -color "violet" -label "S val" sim:/main/b2v_CPU0/S_reg/value
 
 #add wave -position insertpoint -color "orange" -label "cu_from_mem" sim:/main/b2v_CPU0/cu_from_mem
 add wave -position insertpoint -color "orange" -label "from_mem" sim:/main/b2v_CPU0/from_mem
@@ -92,7 +92,7 @@ add wave -position insertpoint -color "firebrick" -label "alu B intr" sim:/main/
 
 add wave -position insertpoint -color "firebrick" -label "alu out" sim:/main/b2v_CPU0/ALU/out
 add wave -position insertpoint -color "firebrick" -label "alu out latch" sim:/main/b2v_CPU0/alu_out_latch
-#add wave -position insertpoint -color "firebrick" -label "alu out oe" sim:/main/b2v_CPU0/alu_out_oe
+#add wave -position insertpoint -color "firebrick" -label "alu out oe" sim:/main/b2v_CPU0/tim_alu_out_oe
 add wave -position insertpoint -color "firebrick" -label "alu out reg" sim:/main/b2v_CPU0/ALU_out_reg/value
 
 
