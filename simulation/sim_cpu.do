@@ -82,11 +82,8 @@ add wave -position insertpoint -color "coral" -label "to_mem" sim:/main/b2v_CPU0
 
 #add wave -position insertpoint -color "firebrick" -label "alu A" sim:/main/b2v_CPU0/ALU/A
 #add wave -position insertpoint -color "firebrick" -label "alu B" sim:/main/b2v_CPU0/ALU/B
-add wave -position insertpoint -color "firebrick" -label "alu A intr" sim:/main/b2v_CPU0/ALU/Ai
 add wave -position insertpoint -color "firebrick" -label "alu B intr" sim:/main/b2v_CPU0/ALU/Bi
-#add wave -position insertpoint -color "firebrick" -label "alu B pass" sim:/main/b2v_CPU0/ALU/pass_B
 #add wave -position insertpoint -color "firebrick" -label "alu A inc" sim:/main/b2v_CPU0/ALU/inc_A
-#add wave -position insertpoint -color "firebrick" -label "alu B inc" sim:/main/b2v_CPU0/ALU/inc_B
 #add wave -position insertpoint -color "firebrick" -label "alu add" sim:/main/b2v_CPU0/ALU/add
 #add wave -position insertpoint -color "firebrick" -label "alu sub" sim:/main/b2v_CPU0/ALU/sub
 

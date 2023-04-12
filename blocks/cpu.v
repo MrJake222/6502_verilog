@@ -84,13 +84,8 @@ CPU_control CU (IR_val,
 	cu_alu_add, cu_alu_sub
 );
 
-//wire cu_alu_op = cu_add | cu_sub; // also alu output enable
-//wire cu_sb_pass = cu_to_mem | (cu_from_mem & ~cu_alu_op);
-
 
 // Timing values 
-// ~~(all positive logic)~~
-// ~~(controlled by clocked logic on posedge)~~
 // derived from RAMS
 // ------------ registers ------------ //
 // controlled by state machine
@@ -148,11 +143,11 @@ end
 
 // datapath control
 wire reg_to_mem = cu_reg_to_mem & tim_work_cycle; // direct write from register to memory
-											//   used to open side bus buffer and output to internal data bus
+											      //   used to open side bus buffer and output to internal data bus
 wire reg_to_reg = cu_reg_to_reg & tim_work_cycle; // internal register transfer (passes ALU - used for increments)
-											//   used to open side bus buffer
+										          //   used to open side bus buffer
 wire mem_to_reg = cu_mem_to_reg & tim_work_cycle; // direct read from memory to register
-								 //   used to pass A reg in ALU (it's default i think?)
+								                  //   variable itself unused for now
 wire mem_to_mem = cu_mem_to_mem & tim_work_cycle; // not implemented (RMW)
 
 // alu control (async)
@@ -171,14 +166,9 @@ wire [7:0] intr_data_bus;
 wire [7:0] side_bus;
 
 wire sb2data_pass = reg_to_mem | reg_to_reg;
-wire data2sb_pass = 0;//cu_sb_pass & any_w;
 
 // ALU
 wire [7:0] alu_val;
-
-// Register mangling (load/increment)
-// wire alu_b_zero = cu_reg_transfer;//~cu_alu_op;
-// wire alu_b_one = 0;
 
 wire alu_out_latch = tim_work_cycle;
 
@@ -278,9 +268,8 @@ CPU_register S_reg (
 	.data_bus_out(side_bus)
 );
 
+
 // combinational
-
-
 CPU_bus_buffer mem_buffer (
 	.port_A(data_bus),
 	.port_B(intr_data_bus),
@@ -293,9 +282,7 @@ CPU_ALU ALU (
 	.add(alu_add),
 	.sub(alu_sub),
 	
-	.pass_B(0),
 	.inc_A(alu_inc),
-	.inc_B(0),
 	
 	.A(intr_data_bus),
 	.B(side_bus),
@@ -314,7 +301,7 @@ CPU_register ALU_out_reg (
 CPU_bus_buffer side_data_buffer (
 	.port_A(intr_data_bus),
 	.port_B(side_bus),
-	.AB(data2sb_pass),
+	.AB(0),
 	.BA(sb2data_pass)
 );
 

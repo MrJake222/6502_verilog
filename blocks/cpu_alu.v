@@ -5,9 +5,7 @@ module CPU_ALU (
 	input wire sub,
 	
 	// default is out=A
-	input wire pass_B, // out=B
 	input wire inc_A,  // out=A+1
-	input wire inc_B,  // out=1+B
 	
 	input wire [7:0] A,
 	input wire [7:0] B,
@@ -18,17 +16,9 @@ module CPU_ALU (
 // TODO rewrite as multiplexer
 // TODO unify increments
 
-reg [7:0] Ai;
 reg [7:0] Bi;
 always @*
-begin
-	if (pass_B)
-		Ai = 8'h00;
-	else if (inc_B)
-		Ai = 8'h01;
-	else
-		Ai = A;
-	
+begin	
 	if (inc_A)
 		Bi = 8'h01;
 	else
@@ -37,12 +27,12 @@ end
 
 always @*
 begin
-	if (add | pass_B | inc_A | inc_B)
-		out = Ai + Bi;
+	if (add | inc_A)
+		out = Bi + A;
 	else if (sub)
-		out = Ai - Bi;
+		out = Bi - A;
 	else
-		out = Ai;
+		out = A;
 end
 
 endmodule
