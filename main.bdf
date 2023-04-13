@@ -515,8 +515,8 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 16 16)
 		(output)
-		(text "1" (rect 19 7 26 19)(font "Courier New" (bold))(invisible))
-		(text "1" (rect 19 7 26 19)(font "Courier New" (bold))(invisible))
+		(text "1" (rect 19 7 27 18)(font "Courier New" (bold))(invisible))
+		(text "1" (rect 19 7 27 18)(font "Courier New" (bold))(invisible))
 		(line (pt 16 16)(pt 16 8))
 	)
 	(drawing
@@ -530,15 +530,15 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 0 16)
 		(input)
-		(text "IN" (rect 2 7 14 19)(font "Courier New" (bold))(invisible))
-		(text "IN" (rect 2 7 14 19)(font "Courier New" (bold))(invisible))
+		(text "IN" (rect 2 7 14 18)(font "Courier New" (bold))(invisible))
+		(text "IN" (rect 2 7 14 18)(font "Courier New" (bold))(invisible))
 		(line (pt 0 16)(pt 13 16))
 	)
 	(port
 		(pt 48 16)
 		(output)
-		(text "OUT" (rect 32 7 53 19)(font "Courier New" (bold))(invisible))
-		(text "OUT" (rect 32 7 53 19)(font "Courier New" (bold))(invisible))
+		(text "OUT" (rect 32 7 53 18)(font "Courier New" (bold))(invisible))
+		(text "OUT" (rect 32 7 53 18)(font "Courier New" (bold))(invisible))
 		(line (pt 39 16)(pt 48 16))
 	)
 	(drawing
@@ -622,8 +622,8 @@ https://fpgasoftware.intel.com/eula.
 )
 (symbol
 	(rect 368 1072 504 1184)
-	(text "UART" (rect 5 0 34 12)(font "Arial" ))
-	(text "uart1" (rect 8 96 37 108)(font "Arial" ))
+	(text "dbgu" (rect 5 0 32 12)(font "Arial" ))
+	(text "dbgu0" (rect 8 96 39 108)(font "Intel Clear" ))
 	(port
 		(pt 0 32)
 		(input)
@@ -649,7 +649,7 @@ https://fpgasoftware.intel.com/eula.
 		(pt 136 32)
 		(output)
 		(text "tx" (rect 0 0 11 12)(font "Arial" ))
-		(text "tx" (rect 106 27 115 39)(font "Arial" ))
+		(text "tx" (rect 106 27 117 39)(font "Arial" ))
 		(line (pt 136 32)(pt 120 32))
 	)
 	(drawing

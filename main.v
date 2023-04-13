@@ -14,8 +14,8 @@
 // https://fpgasoftware.intel.com/eula.
 
 // PROGRAM		"Quartus Prime"
-// VERSION		"Version 21.1.1 Build 850 06/23/2022 SJ Lite Edition"
-// CREATED		"Wed Apr 12 20:58:18 2023"
+// VERSION		"Version 22.1std.0 Build 915 10/25/2022 SC Lite Edition"
+// CREATED		"Thu Apr 13 16:50:56 2023"
 
 module main(
 	MAX10_CLK1_50,
@@ -73,6 +73,17 @@ CPU	b2v_CPU0(
 	.dbg_IR_val(SYNTHESIZED_WIRE_3));
 
 
+dbgu	b2v_dbgu0(
+	.clk(clk_uart),
+	.n_reset(n_reset),
+	.rx(uart_rx),
+	.val_A(8'h01),
+	.val_X(8'hAA),
+	.val_Y(8'hEE),
+	.val_S(8'hFB)
+	);
+
+
 hex_decoder	b2v_hex_A(
 	.dot(SYNTHESIZED_WIRE_6),
 	.data(SYNTHESIZED_WIRE_1),
@@ -102,13 +113,6 @@ ROM	b2v_rom0(
 	.mem_clk(clk),
 	.addr(addr),
 	.data(data));
-
-
-UART	b2v_uart1(
-	.clk(clk_uart),
-	.n_reset(n_reset),
-	.rx(uart_rx)
-	);
 
 
 VGA	b2v_VGA0(

@@ -1,4 +1,4 @@
-module ROM (
+
 	input wire mem_clk,
 	input wire [15:0] addr,
 	output wire [7:0] data
