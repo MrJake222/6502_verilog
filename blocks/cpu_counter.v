@@ -5,12 +5,15 @@ module CPU_counter #(parameter WIDTH=16) (
 	input wire cnt_enable, // counts up when 1 on negedge
 	
 	input wire [WIDTH-1:0] bus_in,
-	output wire [WIDTH-1:0] bus_out
+	output wire [WIDTH-1:0] bus_out,
+	
+	output wire [WIDTH-1:0] dbg_value
 );
 
 reg [WIDTH-1:0] value;
 
 assign bus_out = OE ? value : {WIDTH{1'bZ}};
+assign dbg_value = value;
 
 always @ (negedge clk)
 begin

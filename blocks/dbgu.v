@@ -1,19 +1,31 @@
 module dbgu (
+   // system
     input wire clk,
     input wire n_reset,
-    
+	 
+   // uart
     input wire rx,
     output wire tx,
     
+	// cpu
+    input wire [15:0] val_PC,
+    input wire [7:0] val_IR,
     input wire [7:0] val_A,
     input wire [7:0] val_X,
     input wire [7:0] val_Y,
     input wire [7:0] val_S,
-    
-    output reg [7:0] data_bus_out,
-    input reg [7:0] data_bus_in,
+    output reg cpu_clk,
+    output reg cpu_n_reset,
+	 
+   // memory
+    output reg [15:0] adr_ptr,
+    output wire [7:0] data_bus_out,
+    input wire [7:0] data_bus_in,
     output reg RW,
-    output reg mem_op
+    output wire mem_op,
+    
+    
+    output wire dbg_rx_sample
 );
 
 wire uart_rx_ready;
@@ -34,21 +46,29 @@ UART uart0 (
     
     .tx_write(uart_tx_write),
     .tx_finished(uart_tx_finished),
-    .tx_data(uart_tx_data)
+    .tx_data(uart_tx_data),
+    
+    .dbg_rx_sample(dbg_rx_sample)
 );
 
-reg [1:0] rx_byte;
-reg [7:0] rx_data [3:0];
+reg rx_byte;             // 0-1; no of byte received
+reg [7:0] rx_data [1:0]; // 2-bytes of received instruction
 reg instr_rx_finish;
 
-reg [1:0] tx_byte;
-reg [7:0] tx_data [3:0];
+reg tx_byte;             // 0-1; no of byte sent
+reg [7:0] tx_data [1:0]; // 2-bytes of response
 reg instr_tx_finish;
 reg transmit;
 
+reg mem_write;
 reg mem_read;
+reg mem_read_idx;
+assign mem_op = mem_write | mem_read;
 
-reg [15:0] adr_ptr;
+reg [7:0] data_bus_out_buf;
+assign data_bus_out = RW ? 8'hZZ : data_bus_out_buf;
+
+reg [7:0] cpu_cycles;    // for how long should cpu run
 
 always @ (negedge clk)
 begin
@@ -64,14 +84,18 @@ begin
         transmit <= 0;
         tx_byte <= 0;
         
-        mem_op <= 0;
+        mem_write <= 0;
         mem_read <= 0;
+        
+        cpu_clk <= 0;
+        cpu_cycles <= 0;
+        cpu_n_reset <= 1;
     end
 
     if (uart_rx_ready)
     begin
         rx_data[rx_byte] <= uart_rx_data;
-        if (rx_byte == 3)
+        if (rx_byte == 1)
             instr_rx_finish <= 1;
             
         rx_byte <= rx_byte + 1;
@@ -86,49 +110,108 @@ begin
         
         // instruction select
         case (rx_data[0])
-            8'h01: // set address pointer
+            8'h01: // set address pointer low
             begin
-                adr_ptr <= {rx_data[2], rx_data[1]};
+                adr_ptr[7:0] <= rx_data[1];
             end
             
-            8'h02: // write to memory
+            8'h02: // set address pointer high
+            begin
+                adr_ptr[15:8] <= rx_data[1];
+            end
+            
+            8'h03: // get address pointer
+            begin
+                tx_data[0] <= adr_ptr[7:0];
+                tx_data[1] <= adr_ptr[15:8];
+                transmit <= 1;
+            end
+            
+            8'h04: // write to memory
             begin
                 RW <= 0;
-                data_bus_out <= rx_data[1];
-                mem_op <= 1;
+                data_bus_out_buf <= rx_data[1];
+                mem_write <= 1;
             end
             
-            8'h03: // read from memory
+            8'h05: // read from memory 2-byte
             begin
                 RW <= 1;
-                mem_op <= 1;
                 mem_read <= 1;
+                mem_read_idx <= 0;
             end
             
-            8'h04: // get A, X, Y, S
+            8'h10: // get A, S
             begin
                 tx_data[0] <= val_A;
-                tx_data[1] <= val_X;
-                tx_data[2] <= val_Y;
-                tx_data[3] <= val_S;
+                tx_data[1] <= val_S;
                 transmit <= 1;
+            end
+            
+            8'h11: // get X, Y
+            begin
+                tx_data[0] <= val_X;
+                tx_data[1] <= val_Y;
+                transmit <= 1;
+            end
+            
+            8'h12: // get IR
+            begin
+                tx_data[0] <= val_IR;
+                // tx_data[1] <= ???;
+                transmit <= 1;
+            end
+            
+            8'h13: // get PC
+            begin
+                tx_data[0] <= val_PC[7:0];
+                tx_data[1] <= val_PC[15:8];
+                transmit <= 1;
+            end
+            
+            8'h20: // run CPU for x cycles
+            begin
+                cpu_cycles <= rx_data[1];
+            end
+            
+            8'h21: // reset cpu on next cycle
+            begin
+                cpu_n_reset <= 0;
             end
         endcase
     end
 
 
 /* execution */
-    if (mem_op)
-    begin
-        mem_op <= 0;
-        adr_ptr <= adr_ptr + 1;
-    end
+    if (mem_write)
+        mem_write <= 0;
     
     if (mem_read)
     begin
-        mem_read <= 0;
-        tx_data[0] <= data_bus_in;
-        transmit <= 1;
+        tx_data[mem_read_idx] <= data_bus_in;
+    
+        if (mem_read_idx == 1)
+        begin
+            // end of read
+            transmit <= 1;
+            mem_read <= 0;
+        end
+        
+        mem_read_idx <= mem_read_idx + 1;
+    end
+    
+    if (mem_op)
+        adr_ptr <= adr_ptr + 1;
+        
+    if (cpu_cycles > 0)
+    begin
+        cpu_clk <= ~cpu_clk;
+        if (cpu_clk)
+        begin
+            // falling edge
+            cpu_cycles <= cpu_cycles - 1;
+            cpu_n_reset <= 1;
+        end
     end
 
 
@@ -147,7 +230,7 @@ begin
             uart_tx_data <= tx_data[tx_byte];
             uart_tx_write <= 1;
             
-            if (tx_byte == 3)
+            if (tx_byte == 1)
                 instr_tx_finish <= 1;
             
             tx_byte <= tx_byte + 1;

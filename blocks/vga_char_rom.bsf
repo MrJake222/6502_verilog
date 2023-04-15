@@ -4,7 +4,7 @@ editor if you plan to continue editing the block that represents it in
 the Block Editor! File corruption is VERY likely to occur.
 */
 /*
-Copyright (C) 2021  Intel Corporation. All rights reserved.
+Copyright (C) 2022  Intel Corporation. All rights reserved.
 Your use of Intel Corporation's design tools, logic functions 
 and other software and tools, and any partner logic 
 functions, and any output files from any of the foregoing 
@@ -22,7 +22,7 @@ https://fpgasoftware.intel.com/eula.
 (header "symbol" (version "1.2"))
 (symbol
 	(rect 0 0 216 128)
-	(text "vga_char_rom" (rect 67 0 166 15)(font "Arial" (font_size 10)))
+	(text "vga_char_rom" (rect 63 2 162 17)(font "Arial" (font_size 10)))
 	(text "inst" (rect 8 113 24 124)(font "Arial" ))
 	(port
 		(pt 0 32)
@@ -42,12 +42,12 @@ https://fpgasoftware.intel.com/eula.
 		(pt 216 32)
 		(output)
 		(text "q[7..0]" (rect 0 0 36 13)(font "Arial" (font_size 8)))
-		(text "q[7..0]" (rect 182 19 211 31)(font "Arial" (font_size 8)))
+		(text "q[7..0]" (rect 177 19 206 31)(font "Arial" (font_size 8)))
 		(line (pt 216 32)(pt 160 32)(line_width 3))
 	)
 	(drawing
-		(text "8 bits" (rect 110 18 190 150)(font "Arial" )(vertical))
-		(text "2048 words" (rect 120 9 213 176)(font "Arial" )(vertical))
+		(text "8 bits" (rect 109 25 192 156)(font "Arial" )(vertical))
+		(text "2048 words" (rect 120 17 217 184)(font "Arial" )(vertical))
 		(text "Block type: AUTO" (rect 48 115 171 240)(font "Arial" ))
 		(line (pt 104 24)(pt 136 24))
 		(line (pt 136 24)(pt 136 96))

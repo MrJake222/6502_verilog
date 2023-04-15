@@ -15,10 +15,11 @@
 
 // PROGRAM		"Quartus Prime"
 // VERSION		"Version 22.1std.0 Build 915 10/25/2022 SC Lite Edition"
-// CREATED		"Thu Apr 13 16:50:56 2023"
+// CREATED		"Fri Apr 14 14:22:47 2023"
 
 module main(
 	MAX10_CLK1_50,
+	GPIO,
 	KEY,
 	VGA_HS,
 	VGA_VS,
@@ -33,6 +34,7 @@ module main(
 
 
 input wire	MAX10_CLK1_50;
+input wire	[1:0] GPIO;
 input wire	[1:0] KEY;
 output wire	VGA_HS;
 output wire	VGA_VS;
@@ -44,80 +46,121 @@ output wire	[3:0] VGA_B;
 output wire	[3:0] VGA_G;
 output wire	[3:0] VGA_R;
 
-wire	[15:0] addr;
-wire	clk;
+wire	[15:0] addr_bus;
+wire	[15:0] adr_ptr;
+wire	button_clk;
 wire	clk_uart;
+wire	cpu_clk;
+wire	cpu_n_reset;
 wire	[7:0] data;
-wire	n_reset;
+wire	dbgu_cpu_clk;
+wire	dbgu_cpu_n_reset;
+wire	[7:0] gdfx_temp0;
+wire	master_n_reset;
+wire	RW;
 wire	uart_rx;
 wire	uart_tx;
-wire	SYNTHESIZED_WIRE_6;
+wire	[7:0] SYNTHESIZED_WIRE_0;
 wire	[7:0] SYNTHESIZED_WIRE_1;
+wire	[15:0] SYNTHESIZED_WIRE_2;
 wire	[7:0] SYNTHESIZED_WIRE_3;
-wire	SYNTHESIZED_WIRE_4;
-wire	SYNTHESIZED_WIRE_5;
+wire	[7:0] SYNTHESIZED_WIRE_4;
+wire	[7:0] SYNTHESIZED_WIRE_5;
+wire	SYNTHESIZED_WIRE_13;
+wire	SYNTHESIZED_WIRE_14;
+wire	SYNTHESIZED_WIRE_15;
+wire	SYNTHESIZED_WIRE_12;
 
-assign	SYNTHESIZED_WIRE_6 = 1;
+assign	SYNTHESIZED_WIRE_13 = 1;
 
 
 
 
 CPU	b2v_CPU0(
-	.clk(clk),
-	.n_reset(n_reset),
+	.clk(cpu_clk),
+	.n_reset(cpu_n_reset),
 	.data_bus(data),
-	.RW(SYNTHESIZED_WIRE_4),
-	.addr_bus(addr),
+	.RW(RW),
+	.addr_bus(addr_bus),
 	
-	.dbg_A_val(SYNTHESIZED_WIRE_1),
-	.dbg_IR_val(SYNTHESIZED_WIRE_3));
+	.dbg_A_val(SYNTHESIZED_WIRE_0),
+	.dbg_IR_val(SYNTHESIZED_WIRE_1),
+	.dbg_PC_val(SYNTHESIZED_WIRE_2),
+	.dbg_S_val(SYNTHESIZED_WIRE_3),
+	.dbg_X_val(SYNTHESIZED_WIRE_4),
+	.dbg_Y_val(SYNTHESIZED_WIRE_5));
+
+assign	cpu_clk = dbgu_cpu_clk | button_clk;
+
+assign	cpu_n_reset = master_n_reset & dbgu_cpu_n_reset;
 
 
 dbgu	b2v_dbgu0(
 	.clk(clk_uart),
-	.n_reset(n_reset),
+	.n_reset(master_n_reset),
 	.rx(uart_rx),
-	.val_A(8'h01),
-	.val_X(8'hAA),
-	.val_Y(8'hEE),
-	.val_S(8'hFB)
-	);
+	.data_bus_in(gdfx_temp0),
+	.val_A(SYNTHESIZED_WIRE_0),
+	.val_IR(SYNTHESIZED_WIRE_1),
+	.val_PC(SYNTHESIZED_WIRE_2),
+	.val_S(SYNTHESIZED_WIRE_3),
+	.val_X(SYNTHESIZED_WIRE_4),
+	.val_Y(SYNTHESIZED_WIRE_5),
+	
+	.cpu_clk(dbgu_cpu_clk),
+	.cpu_n_reset(dbgu_cpu_n_reset),
+	.RW(SYNTHESIZED_WIRE_15),
+	.mem_op(SYNTHESIZED_WIRE_14),
+	.adr_ptr(adr_ptr),
+	.data_bus_out(gdfx_temp0));
 
 
-hex_decoder	b2v_hex_A(
-	.dot(SYNTHESIZED_WIRE_6),
-	.data(SYNTHESIZED_WIRE_1),
-	.disp_high(HEX3),
-	.disp_low(HEX2));
-
-
-hex_decoder	b2v_hex_IR(
-	.dot(SYNTHESIZED_WIRE_6),
-	.data(SYNTHESIZED_WIRE_3),
+hex_decoder	b2v_hex_disp_0(
+	.dot(SYNTHESIZED_WIRE_13),
+	.data(adr_ptr[7:0]),
 	.disp_high(HEX1),
 	.disp_low(HEX0));
 
 
-assign	clk =  ~KEY[1];
+hex_decoder	b2v_hex_disp_1(
+	.dot(SYNTHESIZED_WIRE_13),
+	.data(adr_ptr[15:8]),
+	.disp_high(HEX3),
+	.disp_low(HEX2));
+
+
+assign	button_clk =  ~KEY[1];
 
 
 RAM	b2v_ram0(
-	.mem_clk(clk),
-	.RW(SYNTHESIZED_WIRE_4),
-	.addr(addr),
-	.data(data)
-	);
+	.mem_clk(cpu_clk),
+	.RW(RW),
+	.dbg_mem_op(SYNTHESIZED_WIRE_14),
+	.dbg_mem_clk(clk_uart),
+	.dbg_RW(SYNTHESIZED_WIRE_15),
+	.addr(addr_bus),
+	.data(data),
+	.dbg_addr(adr_ptr),
+	.dbg_data_in(gdfx_temp0),
+	
+	.dbg_data_out(gdfx_temp0));
 
 
 ROM	b2v_rom0(
-	.mem_clk(clk),
-	.addr(addr),
-	.data(data));
+	.mem_clk(cpu_clk),
+	.dbg_mem_op(SYNTHESIZED_WIRE_14),
+	.dbg_mem_clk(clk_uart),
+	.dbg_RW(SYNTHESIZED_WIRE_15),
+	.addr(addr_bus),
+	.dbg_addr(adr_ptr),
+	.dbg_data_in(gdfx_temp0),
+	.data(data),
+	.dbg_data_out(gdfx_temp0));
 
 
 VGA	b2v_VGA0(
-	.clk_20MHz(SYNTHESIZED_WIRE_5),
-	.n_reset(n_reset),
+	.clk_20MHz(SYNTHESIZED_WIRE_12),
+	.n_reset(master_n_reset),
 	
 	
 	
@@ -131,11 +174,14 @@ VGA	b2v_VGA0(
 
 pll	b2v_vga_pll(
 	.inclk0(MAX10_CLK1_50),
-	.c0(SYNTHESIZED_WIRE_5),
+	.c0(SYNTHESIZED_WIRE_12),
 	
 	.c2(clk_uart));
 
-assign	n_reset = KEY[0];
-assign	n_reset = KEY[0];
+assign	master_n_reset = KEY[0];
+assign	uart_rx = GPIO[1];
+assign	master_n_reset = KEY[0];
+assign	uart_rx = GPIO[1];
+assign	uart_tx = GPIO[0];
 
 endmodule

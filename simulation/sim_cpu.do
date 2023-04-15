@@ -42,9 +42,9 @@ add wave -position insertpoint -color "gold" -label "tim_work_cycle" sim:/main/b
 add wave -position insertpoint -color "violet" -label "tim_writeback" sim:/main/b2v_CPU0/tim_writeback
 
 #add wave -position insertpoint -color "violet" -label "from_A" sim:/main/b2v_CPU0/from_A
-#add wave -position insertpoint -color "violet" -label "to_A" sim:/main/b2v_CPU0/to_A
+add wave -position insertpoint -color "violet" -label "to_A" sim:/main/b2v_CPU0/to_A
 #add wave -position insertpoint -color "violet" -label "cu_from_A" sim:/main/b2v_CPU0/cu_from_A
-#add wave -position insertpoint -color "violet" -label "cu_to_A" sim:/main/b2v_CPU0/cu_to_A
+add wave -position insertpoint -color "violet" -label "cu_to_A" sim:/main/b2v_CPU0/cu_to_A
 add wave -position insertpoint -color "violet" -label "A val" sim:/main/b2v_CPU0/A_reg/value
 
 #add wave -position insertpoint -color "violet" -label "from_X" sim:/main/b2v_CPU0/from_X
@@ -88,10 +88,10 @@ add wave -position insertpoint -color "firebrick" -label "alu out" sim:/main/b2v
 add wave -position insertpoint -color "firebrick" -label "alu out reg" sim:/main/b2v_CPU0/ALU_out_reg/value
 
 
-force -freeze sim:/main/clk 0 {0 ns} , 1 {25 ns} -r {50 ns}
+force -freeze sim:/main/cpu_clk 0 {0 ns} , 1 {25 ns} -r {50 ns}
 
 # simple reset
-force -drive sim:/main/n_reset 1 {0 ns} , 0 {20 ns} , 1 {30 ns}
+force -freeze sim:/main/cpu_n_reset 1 {0 ns} , 0 {20 ns} , 1 {30 ns}
 
 run {900 ns}
 #run {700 ns}

@@ -12,23 +12,35 @@ module UART (
                             // one pulse is sufficient
     output reg tx_finished, // module sets to 1 when transfer finished
                             // for one clock pulse
-    input wire [7:0] tx_data
+    input wire [7:0] tx_data,
+    
+    
+    
+    output reg dbg_rx_sample
 );
 
 localparam CLK_FREQ = 3686400;
 localparam UART_FREQ = 115200;
-localparam BIT_CLK = CLK_FREQ / UART_FREQ;
-localparam HALF_BIT_CLK = CLK_FREQ / UART_FREQ / 2;
+//localparam CLK_FREQ = 11000000;
+//localparam UART_FREQ = 57600;
+localparam BIT_CLK = (CLK_FREQ - 1) / UART_FREQ + 1;
+localparam ONE_AND_HALF_BIT_CLK = BIT_CLK + (BIT_CLK / 2);
+
+initial begin
+$display(BIT_CLK);
+$display(ONE_AND_HALF_BIT_CLK);
+end
 
 // min freq CLK_FREQ / 2^CNT_WIDTH
-localparam CNT_WIDTH = 8;
+// must fit ONE_AND_HALF_BIT_CLK
+localparam CNT_WIDTH = 9;
 
 // ------------------------------------------------------------ //
 // RX
 
 reg [CNT_WIDTH-1:0] rx_cnt;
 reg rx_enable;
-reg [3:0] rx_byte;
+reg [3:0] rx_bit;
 
 always @ (negedge clk)
 begin
@@ -40,9 +52,9 @@ begin
     // start the transfer
     else if (~rx & ~rx_enable)
     begin
-        rx_cnt <= BIT_CLK + HALF_BIT_CLK;
+        rx_cnt <= ONE_AND_HALF_BIT_CLK;
         rx_enable <= 1;
-        rx_byte <= 0;
+        rx_bit <= 0;
     end
     
     if (rx_enable)
@@ -51,26 +63,27 @@ begin
     if (rx_cnt == 0)
     begin
         rx_cnt <= BIT_CLK;
-        rx_byte <= rx_byte + 1;
-        if (rx_byte == 8)
+        rx_bit <= rx_bit + 1;
+        if (rx_bit == 8)
         begin
             // receive stop bit
-        end
-        else if (rx_byte == 9)
-        begin
             // end of transmission
             rx_ready <= 1;
             rx_enable <= 0;
         end
         else begin
             // less than 8 -> receive data
-            rx_data[rx_byte] = rx;
+            rx_data[rx_bit] <= rx;
+            dbg_rx_sample <= 1;
         end
     end
     
     // rx_ready one clock wide pulse
     if (rx_ready)
         rx_ready <= 0;
+    
+    if (dbg_rx_sample)
+        dbg_rx_sample <= 0;
 end
 
 
@@ -95,12 +108,13 @@ end*/
 
 reg [CNT_WIDTH-1:0] tx_cnt;
 reg tx_enable;
-reg [3:0] tx_byte;
+reg [3:0] tx_bit;
 
 always @ (negedge clk)
 begin
     if (~n_reset)
     begin
+        tx <= 1; // idle
         tx_enable <= 0;
         tx_finished <= 0;
     end
@@ -111,7 +125,7 @@ begin
         tx_enable <= 1;
     
         tx_cnt <= BIT_CLK;
-        tx_byte <= 0;
+        tx_bit <= 0;
         tx <= 0;
     end
     
@@ -121,11 +135,11 @@ begin
     if (tx_cnt == 0)
     begin
         tx_cnt <= BIT_CLK;
-        tx_byte <= tx_byte + 1;
-        if (tx_byte == 8)
+        tx_bit <= tx_bit + 1;
+        if (tx_bit == 8)
             // send stop bit
             tx <= 1;
-        else if (tx_byte == 9)
+        else if (tx_bit == 9)
         begin
             // end of transmission
             tx_finished <= 1;
@@ -133,7 +147,7 @@ begin
         end
         else begin
             // less than 8 -> transmit data
-            tx <= tx_data[tx_byte];
+            tx <= tx_data[tx_bit];
         end
     end
     

@@ -12,8 +12,12 @@ module CPU (
 	output reg RW, // write = 0
 	
 	// debug signals
+	output wire [15:0] dbg_PC_val,
 	output wire [7:0] dbg_IR_val,
-	output wire [7:0] dbg_A_val
+	output wire [7:0] dbg_A_val,
+	output wire [7:0] dbg_X_val,
+	output wire [7:0] dbg_Y_val,
+	output wire [7:0] dbg_S_val
 );
 
 // Control wires/regs
@@ -196,7 +200,8 @@ CPU_counter #( .WIDTH(16) ) PC (
 	.WE(PC_load),
 	.cnt_enable(PC_inc),
 	.bus_in(16'h8000),
-	.bus_out(addr_bus)
+	.bus_out(addr_bus),
+	.dbg_value(dbg_PC_val)
 );
 
 CPU_counter #( .WIDTH(3) ) state_reg (
@@ -213,7 +218,8 @@ CPU_register IR (
 	.OE(1),
 	.WE(IR_load),
 	.data_bus_in(intr_data_bus),
-	.data_bus_out(IR_val)
+	.data_bus_out(IR_val),
+	.dbg_value(dbg_IR_val)
 );
 
 // address buffers
@@ -239,7 +245,8 @@ CPU_register A_reg (
 	.OE(from_A),
 	.WE(to_A),
 	.data_bus_in(side_bus),
-	.data_bus_out(side_bus)
+	.data_bus_out(side_bus),
+	.dbg_value(dbg_A_val)
 );
 
 // Index registers
@@ -248,7 +255,8 @@ CPU_register X_reg (
 	.OE(from_X),
 	.WE(to_X),
 	.data_bus_in(side_bus),
-	.data_bus_out(side_bus)
+	.data_bus_out(side_bus),
+	.dbg_value(dbg_X_val)
 );
 
 CPU_register Y_reg (
@@ -256,7 +264,8 @@ CPU_register Y_reg (
 	.OE(from_Y),
 	.WE(to_Y),
 	.data_bus_in(side_bus),
-	.data_bus_out(side_bus)
+	.data_bus_out(side_bus),
+	.dbg_value(dbg_Y_val)
 );
 
 // Stack register
@@ -265,7 +274,8 @@ CPU_register S_reg (
 	.OE(from_S),
 	.WE(to_S),
 	.data_bus_in(side_bus),
-	.data_bus_out(side_bus)
+	.data_bus_out(side_bus),
+	.dbg_value(dbg_S_val)
 );
 
 
@@ -395,9 +405,5 @@ begin
 		default: tim_work_cycle <= 0;
 	endcase
 end
-
-// debug
-assign dbg_IR_val = IR_val;
-// assign dbg_A_val = acc_out;
 
 endmodule
