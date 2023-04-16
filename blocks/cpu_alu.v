@@ -3,6 +3,9 @@ module CPU_ALU (
 	
 	input wire add,
 	input wire sub,
+	input wire bit_or,
+	input wire bit_and,
+	input wire bit_eor,
 	
 	// default is out=A
 	input wire inc_A,  // out=A+1
@@ -31,6 +34,12 @@ begin
 		out = Bi + A;
 	else if (sub)
 		out = Bi - A;
+	else if (bit_or)
+		out = Bi | A;
+	else if (bit_and)
+		out = Bi & A;
+	else if (bit_eor)
+		out = Bi ^ A;
 	else
 		out = A;
 end

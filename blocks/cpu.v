@@ -291,6 +291,9 @@ CPU_bus_buffer mem_buffer (
 CPU_ALU ALU (
 	.add(alu_add),
 	.sub(alu_sub),
+	.bit_or(alu_or),
+	.bit_and(alu_and),
+	.bit_eor(alu_eor),
 	
 	.inc_A(alu_inc),
 	

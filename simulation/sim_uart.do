@@ -97,7 +97,7 @@ add wave -position insertpoint -color "violet" -label "A val" sim:/main/b2v_CPU0
 
 
 # ~3.6864MHz
-force -freeze sim:/main/clk_uart 1 {0 ns} , 0 {135 ns} -r {270 ns}
+force -freeze sim:/main/clk_uart 1 {0 ns} , 0 {135.71 ns} -r {271.43 ns}
 force -freeze sim:/main/button_clk 0 {0 ns}
 
 # simple reset
@@ -133,17 +133,17 @@ force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 1 {3
 #run { 200 us}
 
 # set cpu to reset instr=21
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
 
 # run for x cycles instr=20 x=4=1(reset)+2(LDA)+1(writeback)
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
 
-run { 10 us }
+#run { 10 us }
 
 # get A, S 0x10
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 1 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 1 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
 
-run { 200 us }
+#run { 200 us }

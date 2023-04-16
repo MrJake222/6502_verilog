@@ -25,7 +25,7 @@ module dbgu (
     output wire mem_op,
     
     
-    output wire dbg_rx_sample
+    output wire [7:0] dbg_vect
 );
 
 wire uart_rx_ready;
@@ -48,7 +48,7 @@ UART uart0 (
     .tx_finished(uart_tx_finished),
     .tx_data(uart_tx_data),
     
-    .dbg_rx_sample(dbg_rx_sample)
+    .dbg_vect(dbg_vect)
 );
 
 reg rx_byte;             // 0-1; no of byte received
@@ -70,9 +70,17 @@ assign data_bus_out = RW ? 8'hZZ : data_bus_out_buf;
 
 reg [7:0] cpu_cycles;    // for how long should cpu run
 
+task echo_request ();
+begin
+	tx_data[0] <= rx_data[0];
+	tx_data[1] <= rx_data[1];
+	transmit <= 1;
+end
+endtask
+
 always @ (negedge clk)
 begin
-/* instruction reception */
+/* reset */
     if (~n_reset)
     begin
         uart_tx_write <= 0;
@@ -92,6 +100,7 @@ begin
         cpu_n_reset <= 1;
     end
 
+/* instruction reception */
     if (uart_rx_ready)
     begin
         rx_data[rx_byte] <= uart_rx_data;
@@ -113,11 +122,13 @@ begin
             8'h01: // set address pointer low
             begin
                 adr_ptr[7:0] <= rx_data[1];
+                echo_request();
             end
             
             8'h02: // set address pointer high
             begin
                 adr_ptr[15:8] <= rx_data[1];
+                echo_request();
             end
             
             8'h03: // get address pointer
@@ -172,19 +183,27 @@ begin
             8'h20: // run CPU for x cycles
             begin
                 cpu_cycles <= rx_data[1];
+                echo_request();
             end
             
             8'h21: // reset cpu on next cycle
             begin
                 cpu_n_reset <= 0;
+                echo_request();
             end
         endcase
     end
 
 
-/* execution */
+/* memory access */
+    if (mem_op)
+        adr_ptr <= adr_ptr + 1;
+
     if (mem_write)
+    begin
         mem_write <= 0;
+        echo_request();
+    end
     
     if (mem_read)
     begin
@@ -200,9 +219,7 @@ begin
         mem_read_idx <= mem_read_idx + 1;
     end
     
-    if (mem_op)
-        adr_ptr <= adr_ptr + 1;
-        
+/* cpu run control */
     if (cpu_cycles > 0)
     begin
         cpu_clk <= ~cpu_clk;

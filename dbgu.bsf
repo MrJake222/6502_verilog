@@ -146,9 +146,9 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 248 144)
 		(output)
-		(text "dbg_rx_sample" (rect 0 0 62 12)(font "Arial" ))
-		(text "dbg_rx_sample" (rect 165 139 227 151)(font "Arial" ))
-		(line (pt 248 144)(pt 232 144)(line_width 1))
+		(text "dbg_vect[7..0]" (rect 0 0 57 12)(font "Arial" ))
+		(text "dbg_vect[7..0]" (rect 170 139 227 151)(font "Arial" ))
+		(line (pt 248 144)(pt 232 144)(line_width 3))
 	)
 	(drawing
 		(rectangle (rect 16 16 232 192)(line_width 1))
