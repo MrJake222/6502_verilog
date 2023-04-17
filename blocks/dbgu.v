@@ -183,7 +183,6 @@ begin
             8'h20: // run CPU for x cycles
             begin
                 cpu_cycles <= rx_data[1];
-                echo_request();
             end
             
             8'h21: // reset cpu on next cycle
@@ -226,6 +225,11 @@ begin
         if (cpu_clk)
         begin
             // falling edge
+            
+            if (cpu_cycles == 1)
+                // last edge
+                echo_request();
+            
             cpu_cycles <= cpu_cycles - 1;
             cpu_n_reset <= 1;
         end

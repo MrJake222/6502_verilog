@@ -69,6 +69,7 @@ add wave -position insertpoint -color red -label mem_op sim:/main/b2v_dbgu0/mem_
 #add wave -position insertpoint -color gold -label dbg_data_out sim:/main/b2v_rom0/dbg_data_out
 
 
+add wave -position insertpoint -color gold -label cpu_cycles sim:/main/b2v_dbgu0/cpu_cycles
 #add wave -position insertpoint -color gold -label cpu_clk sim:/main/b2v_dbgu0/cpu_clk
 #add wave -position insertpoint -color gold -label cpu_n_reset sim:/main/b2v_dbgu0/cpu_n_reset
 
@@ -105,12 +106,14 @@ force -drive sim:/main/master_n_reset 1 {0 ns} , 0 {100 ns} , 1 {160 ns}
 
 #                                   start        D0             D1          D2            D3            D4          D5             D6            D7            stop
 # set address pointer low instr=01 alow=00
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#run { 200 us }
 
 # set address pointer high instr=02 ahigh=80
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 1 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 1 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 1 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 1 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#run { 200 us }
 
 # get addr pointer instr=03
 #force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 1 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
@@ -118,14 +121,17 @@ force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {3
 #run {200 us}
 
 # write to memory instr=04 data=a9,55 *2
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 1 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 1 {78.1 us} , 1 {86.8 us} ; run {96 us}
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 1 {52 us} , 0 {60.76 us} , 1 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 1 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 1 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#run { 200 us }
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 1 {52 us} , 0 {60.76 us} , 1 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#run { 200 us }
 
 # set address pointer low instr=01 alow=00
 #force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
 #force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+#run { 200 us }
 
 # read from memory 2-byte instr=05
 #force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
@@ -133,17 +139,16 @@ force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 1 {3
 #run { 200 us}
 
 # set cpu to reset instr=21
-#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 1 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+run { 200 us }
 
 # run for x cycles instr=20 x=4=1(reset)+2(LDA)+1(writeback)
-#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-#force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-
-#run { 10 us }
+force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 1 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 1 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
+run { 210 us }
 
 # get A, S 0x10
 #force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 1 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
 #force -drive sim:/main/b2v_dbgu0/rx 0 {8.7 us} , 0 {17.36 us} , 0 {26 us} , 0 {34.7 us} , 0 {43.4 us} , 0 {52 us} , 0 {60.76 us} , 0 {69.4 us} , 0 {78.1 us} , 1 {86.8 us} ; run {96 us}
-
 #run { 200 us }
