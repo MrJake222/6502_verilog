@@ -15,14 +15,14 @@
 
 // PROGRAM		"Quartus Prime"
 // VERSION		"Version 22.1std.0 Build 915 10/25/2022 SC Lite Edition"
-// CREATED		"Fri Apr 14 14:22:47 2023"
+// CREATED		"Wed Apr 19 20:03:46 2023"
 
 module main(
 	MAX10_CLK1_50,
-	GPIO,
 	KEY,
 	VGA_HS,
 	VGA_VS,
+	GPIO,
 	HEX0,
 	HEX1,
 	HEX2,
@@ -34,10 +34,10 @@ module main(
 
 
 input wire	MAX10_CLK1_50;
-input wire	[1:0] GPIO;
 input wire	[1:0] KEY;
 output wire	VGA_HS;
 output wire	VGA_VS;
+inout wire	[9:0] GPIO;
 output wire	[7:0] HEX0;
 output wire	[7:0] HEX1;
 output wire	[7:0] HEX2;
@@ -71,7 +71,7 @@ wire	SYNTHESIZED_WIRE_14;
 wire	SYNTHESIZED_WIRE_15;
 wire	SYNTHESIZED_WIRE_12;
 
-assign	SYNTHESIZED_WIRE_13 = 1;
+assign	SYNTHESIZED_WIRE_13 = 0;
 
 
 
@@ -79,10 +79,10 @@ assign	SYNTHESIZED_WIRE_13 = 1;
 CPU	b2v_CPU0(
 	.clk(cpu_clk),
 	.n_reset(cpu_n_reset),
-	.data_bus(data),
+	.data_bus_in(data),
 	.RW(RW),
-	.addr_bus(addr_bus),
-	
+	.adr_bus(addr_bus),
+	.data_bus_out(data),
 	.dbg_A_val(SYNTHESIZED_WIRE_0),
 	.dbg_IR_val(SYNTHESIZED_WIRE_1),
 	.dbg_PC_val(SYNTHESIZED_WIRE_2),
@@ -106,13 +106,14 @@ dbgu	b2v_dbgu0(
 	.val_S(SYNTHESIZED_WIRE_3),
 	.val_X(SYNTHESIZED_WIRE_4),
 	.val_Y(SYNTHESIZED_WIRE_5),
-	
+	.tx(uart_tx),
 	.cpu_clk(dbgu_cpu_clk),
 	.cpu_n_reset(dbgu_cpu_n_reset),
 	.RW(SYNTHESIZED_WIRE_15),
 	.mem_op(SYNTHESIZED_WIRE_14),
 	.adr_ptr(adr_ptr),
-	.data_bus_out(gdfx_temp0));
+	.data_bus_out(gdfx_temp0),
+	.dbg_vect(GPIO[9:2]));
 
 
 hex_decoder	b2v_hex_disp_0(
@@ -179,7 +180,8 @@ pll	b2v_vga_pll(
 	.c2(clk_uart));
 
 assign	master_n_reset = KEY[0];
-assign	uart_rx = GPIO[1];
+assign	GPIO[0] = uart_tx;
+assign	GPIO[1] = uart_rx;
 assign	master_n_reset = KEY[0];
 assign	uart_rx = GPIO[1];
 assign	uart_tx = GPIO[0];
