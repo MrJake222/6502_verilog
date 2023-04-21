@@ -11,11 +11,11 @@ add wave -position insertpoint -color "hot pink" -label clk sim:/main/b2v_CPU0/c
 add wave -position insertpoint -color "hot pink" -label n_reset sim:/main/b2v_CPU0/n_reset
 
 
-add wave -position insertpoint -color "cyan" -label PC_no_inc sim:/main/b2v_CPU0/PC_no_inc
-add wave -position insertpoint -color "cyan" -label PC_no_drive_bus sim:/main/b2v_CPU0/PC_no_drive_bus
+#add wave -position insertpoint -color "cyan" -label PC_no_inc sim:/main/b2v_CPU0/PC_no_inc
+#add wave -position insertpoint -color "cyan" -label PC_no_drive_bus sim:/main/b2v_CPU0/PC_no_drive_bus
 add wave -position insertpoint -color "cyan" -label "PC val" sim:/main/b2v_CPU0/PC
 
-add wave -position insertpoint -color "olive" -label state_reset sim:/main/b2v_CPU0/state_reset
+#add wave -position insertpoint -color "olive" -label state_reset sim:/main/b2v_CPU0/state_reset
 add wave -position insertpoint -color "olive" -label state sim:/main/b2v_CPU0/state
 add wave -position insertpoint -color "olive" -label RAMS sim:/main/b2v_CPU0/RAMS
 

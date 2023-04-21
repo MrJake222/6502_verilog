@@ -128,16 +128,56 @@ CPU_ALU ALU (
 	.out(alu_val)
 );
 
-reg PC_no_inc;
-reg PC_no_drive_bus;
-reg state_reset;
-reg instr_execute;
-
 // Logic
 // gluing together reset, address mode and current state
 // RAMS = reset addr mode state (positive logic)
 wire [7:0] RAMS = { ~n_reset, cu_adr_mode, state };
 
+task set_PC_adr_bus(input [15:0] val);
+begin
+	PC <= val;
+	adr_bus <= val;
+end
+endtask
+
+task set_PC_adr_bus_inc();
+begin
+	set_PC_adr_bus(PC + 1);
+end
+endtask
+
+task state_inc();
+begin
+	state <= state + 1;
+end
+endtask
+
+task state_reset();
+begin
+	state <= 0;
+end
+endtask
+
+task next();
+begin
+	state_inc();
+	set_PC_adr_bus_inc();
+end
+endtask
+
+task next_rst();
+begin
+	state_reset();
+	set_PC_adr_bus_inc();
+	RW <= `RW_READ;
+end
+endtask
+
+task next_state();
+begin
+	state_inc();
+end
+endtask
 
 always @ (negedge clk)
 begin
@@ -146,40 +186,45 @@ begin
 	
 	if (~n_reset)
 	begin
-		PC <= 16'h8000;
+		set_PC_adr_bus(16'h8000);
+		RW <= `RW_READ;
+		state <= 0;
 	
 		// exceptional conditions
-		PC_no_inc <= 0;
-		PC_no_drive_bus <= 0;
-		state_reset <= 1;
-		instr_execute <= 0;
+		//PC_no_inc <= 0;
+		//PC_no_drive_bus <= 0;
+		//state_reset <= 1;
+		//instr_execute <= 0;
 	end else
 	begin
 
-		if (state_reset)
+		/*if (state_reset)
 		begin
 			state_reset <= 0;
 			state <= 0;
 			RW <= `RW_READ;
 		end else
-		begin
+		begin*/
 			casex (RAMS)
 				{1'b0, `ADR_DONT_CARE, 3'd0}:
 				begin
 					IR <= data_bus_in;
+					next();
 				end
 				
 				/* --------------------- Absolute addressing --------------------- */
 				{1'b0, `ADR_ABS, 3'd1}:
 				begin
 					adr_low <= data_bus_in;
-					PC_no_drive_bus <= 1;
-					PC_no_inc <= 1;
+					//PC_no_drive_bus <= 1;
+					//PC_no_inc <= 1;
+					next();
 				end
+				
 				{1'b0, `ADR_ABS, 3'd2}:
 				begin
 					adr_bus <= { data_bus_in, adr_low };
-					state_reset <= 1;
+					//state_reset <= 1;
 					
 					if (cu_to_mem)
 					begin
@@ -195,41 +240,44 @@ begin
 					begin
 						// read from memory
 						// need to perform the read on the next cycle
-						instr_execute <= 1;
+						//instr_execute <= 1;
 					end
+					
+					// next();
+					next_state();
+				end
+				
+				{1'b0, `ADR_ABS, 3'd3}:
+				begin
+					if (cu_to_A) A <= data_bus_in;
+					if (cu_to_X) X <= data_bus_in;
+					if (cu_to_Y) Y <= data_bus_in;
+					if (cu_to_S) S <= data_bus_in;
+					
+					next_rst();
 				end
 				
 				/* --------------------- Immediate addressing --------------------- */
 				{1'b0, `ADR_IMM, 3'd1}:
 				begin
-					state_reset <= 1; // TODO this needs to be earlier
+					//state_reset <= 1; // TODO this needs to be earlier
 					
 					if (cu_to_A) A <= data_bus_in; // TODO write to alu, single statement or task
 					if (cu_to_X) X <= data_bus_in;
 					if (cu_to_Y) Y <= data_bus_in;
 					if (cu_to_S) S <= data_bus_in;
+					
+					next_rst();
 				end
 			endcase
 		
-			state <= state + 1;
-		end
-		
-		
-		
-		if (PC_no_inc)
-			PC_no_inc <= 0;
-		else
-			PC <= PC + 1;
-		
-		if (PC_no_drive_bus)
-			PC_no_drive_bus <= 0;
-		else
-			adr_bus <= PC;
+			//state <= state + 1;
+		//end
 		
 		
 		
 		
-		if (instr_execute)
+		/*if (instr_execute)
 		begin
 			instr_execute <= 0;
 			
@@ -237,7 +285,7 @@ begin
 			if (cu_to_X) X <= data_bus_in;
 			if (cu_to_Y) Y <= data_bus_in;
 			if (cu_to_S) S <= data_bus_in;
-		end
+		end*/
 	end
 end
 
