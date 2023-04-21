@@ -102,6 +102,7 @@ reg [7:0] X;
 reg [7:0] Y;
 reg [7:0] S;
 
+
 /*reg alu_add;
 reg alu_sub;
 reg alu_or;
@@ -130,6 +131,22 @@ CPU_ALU ALU (
 	.out(alu_out)
 );
 
+task alu_latch();
+	alu_A <= data_bus_in;
+	if (cu_from_A) alu_B <= A;
+	if (cu_from_X) alu_B <= X;
+	if (cu_from_Y) alu_B <= Y;
+	if (cu_from_S) alu_B <= S;
+endtask
+
+task alu_writeback();
+	if (cu_to_A) A <= alu_out;
+	if (cu_to_X) X <= alu_out;
+	if (cu_to_Y) Y <= alu_out;
+	if (cu_to_S) S <= alu_out;
+endtask
+
+
 // Logic
 // gluing together reset, address mode and current state
 // RAMS = reset addr mode state (positive logic)
@@ -154,6 +171,7 @@ endtask
 task state_reset();
 	state <= 0;
 endtask
+
 
 /*
  * end-of-state helper functions
@@ -185,10 +203,19 @@ endtask
 // but when address bus is loaded with something (stack, abs address)
 // doesn't increment and push out PC
 task next_state_only();
-begin
 	state_inc();
-end
 endtask
+
+
+
+task mem_write();
+	RW <= `RW_WRITE;
+	if (cu_from_A) data_bus_out_buf <= A;
+	if (cu_from_X) data_bus_out_buf <= X;
+	if (cu_from_Y) data_bus_out_buf <= Y;
+	if (cu_from_S) data_bus_out_buf <= S;
+endtask
+
 
 always @ (negedge clk)
 begin
@@ -209,12 +236,7 @@ begin
 				IR <= data_bus_in;
 				next();
 				
-				// writeback ALU -> registers
-				if (cu_to_A) A <= alu_out;
-				if (cu_to_X) X <= alu_out;
-				if (cu_to_Y) Y <= alu_out;
-				if (cu_to_S) S <= alu_out;
-				
+				alu_writeback();
 				alu_pass_B <= 0;
 			end
 			
@@ -232,30 +254,17 @@ begin
 				next_state_only();
 
 				if (cu_to_mem)
-				begin
 					// write to memory
-					// CPU only provides data
-					RW <= `RW_WRITE;
-					if (cu_from_A) data_bus_out_buf <= A;
-					if (cu_from_X) data_bus_out_buf <= X;
-					if (cu_from_Y) data_bus_out_buf <= Y;
-					if (cu_from_S) data_bus_out_buf <= S;
-					
-				end else
-				begin
-					// read from memory
-					// need to perform the read on the next cycle
-				end
+					// CPU has to provide data this cycle
+					// (memory write is next posedge)
+					mem_write();
+				
+				// in case of read, data is fetched next cycle
 			end
 			
 			{1'b0, `ADR_ABS, 3'd3}:
 			begin
-				alu_A <= data_bus_in;
-				if (cu_from_A) alu_B <= A;
-				if (cu_from_X) alu_B <= X;
-				if (cu_from_Y) alu_B <= Y;
-				if (cu_from_S) alu_B <= S;
-				
+				alu_latch();
 				next_rst();
 			end
 			
@@ -263,12 +272,7 @@ begin
 			/* --------------------- Immediate addressing --------------------- */
 			{1'b0, `ADR_IMM, 3'd1}:
 			begin				
-				alu_A <= data_bus_in;
-				if (cu_from_A) alu_B <= A;
-				if (cu_from_X) alu_B <= X;
-				if (cu_from_Y) alu_B <= Y;
-				if (cu_from_S) alu_B <= S;
-				
+				alu_latch();
 				next_rst();
 			end
 			
@@ -282,12 +286,7 @@ begin
 				// no inc/dec is active
 				
 				alu_pass_B <= 1;
-				
-				alu_A <= data_bus_in;
-				if (cu_from_A) alu_B <= A;
-				if (cu_from_X) alu_B <= X;
-				if (cu_from_Y) alu_B <= Y;
-				if (cu_from_S) alu_B <= S;
+				alu_latch();
 				
 				next_rst_no_PC();
 			end
