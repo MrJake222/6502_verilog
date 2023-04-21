@@ -112,6 +112,8 @@ reg [7:0] alu_A;
 reg [7:0] alu_B;
 wire [7:0] alu_out;
 
+reg alu_pass_B;
+
 // ALU
 CPU_ALU ALU (
 	    .add(cu_alu_add),
@@ -119,8 +121,9 @@ CPU_ALU ALU (
 	 .bit_or(cu_alu_or),
 	.bit_and(cu_alu_and),
 	.bit_eor(cu_alu_eor),
-	  .inc_A(cu_alu_inc),
-	
+	  .inc_B(cu_alu_inc),
+     .pass_B(alu_pass_B),
+
 	.A(alu_A),
 	.B(alu_B),
 	
@@ -163,10 +166,18 @@ task next();
 endtask
 
 // used on final state
-// increments PC, but resets state and RW
+// increments PC, resets state and RW
 task next_rst();
 	state_reset();
 	set_PC_adr_bus_inc();
+	RW <= `RW_READ;
+endtask
+
+// used on final state
+// doesn't increment PC, resets state and RW
+// used for example in implied mode when operand is not used
+task next_rst_no_PC();
+	state_reset();
 	RW <= `RW_READ;
 endtask
 
@@ -203,6 +214,8 @@ begin
 				if (cu_to_X) X <= alu_out;
 				if (cu_to_Y) Y <= alu_out;
 				if (cu_to_S) S <= alu_out;
+				
+				alu_pass_B <= 0;
 			end
 			
 			
@@ -258,7 +271,26 @@ begin
 				
 				next_rst();
 			end
-
+			
+			
+			/* --------------------- Implied --------------------- */
+			{1'b0, `ADR_IMPL, 3'd1}:
+			begin
+				// implied mode used only for:
+				// flags, nop, decrements, increments, transfers
+				// no data bus used, we use alu_pass_B in case of
+				// no inc/dec is active
+				
+				alu_pass_B <= 1;
+				
+				alu_A <= data_bus_in;
+				if (cu_from_A) alu_B <= A;
+				if (cu_from_X) alu_B <= X;
+				if (cu_from_Y) alu_B <= Y;
+				if (cu_from_S) alu_B <= S;
+				
+				next_rst_no_PC();
+			end
 		endcase
 	end
 end

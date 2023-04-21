@@ -61,14 +61,14 @@ add wave -position insertpoint -color "khaki" -label adr_low sim:/main/b2v_CPU0/
 #add wave -position insertpoint -color "khaki" -label "adr_high_latch" sim:/main/b2v_CPU0/adr_high_latch
 
 
-#add wave -position insertpoint -color "firebrick" -label "alu A" sim:/main/b2v_CPU0/ALU/A
-#add wave -position insertpoint -color "firebrick" -label "alu B" sim:/main/b2v_CPU0/ALU/B
+add wave -position insertpoint -color "firebrick" -label "alu A" sim:/main/b2v_CPU0/ALU/A
+add wave -position insertpoint -color "firebrick" -label "alu B" sim:/main/b2v_CPU0/ALU/B
 #add wave -position insertpoint -color "firebrick" -label "alu B intr" sim:/main/b2v_CPU0/ALU/Bi
 #add wave -position insertpoint -color "firebrick" -label "alu A inc" sim:/main/b2v_CPU0/ALU/inc_A
 #add wave -position insertpoint -color "firebrick" -label "alu add" sim:/main/b2v_CPU0/ALU/add
 #add wave -position insertpoint -color "firebrick" -label "alu sub" sim:/main/b2v_CPU0/ALU/sub
 
-#add wave -position insertpoint -color "firebrick" -label "alu out" sim:/main/b2v_CPU0/ALU/out
+add wave -position insertpoint -color "firebrick" -label "alu out" sim:/main/b2v_CPU0/ALU/out
 #add wave -position insertpoint -color "firebrick" -label "alu out latch" sim:/main/b2v_CPU0/alu_out_latch
 #add wave -position insertpoint -color "firebrick" -label "alu out reg" sim:/main/b2v_CPU0/ALU_out_reg/value
 

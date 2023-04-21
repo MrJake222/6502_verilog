@@ -8,7 +8,8 @@ module CPU_ALU (
 	input wire bit_eor,
 	
 	// default is out=A
-	input wire inc_A,  // out=A+1
+	input wire inc_B,  // out=B+1
+	input wire pass_B, // out=B
 	
 	input wire [7:0] A,
 	input wire [7:0] B,
@@ -17,31 +18,32 @@ module CPU_ALU (
 );
 
 // TODO rewrite as multiplexer
-// TODO unify increments
 
-reg [7:0] Bi;
+reg [7:0] Ai;
 always @*
 begin	
-	if (inc_A)
-		Bi = 8'h01;
+	if (inc_B)
+		Ai = 8'h01;
 	else
-		Bi = B;
+		Ai = A;
 end
 
 always @*
 begin
-	if (add | inc_A)
-		out = Bi + A;
+	if (add | inc_B)
+		out = B + Ai;
 	else if (sub)
-		out = Bi - A;
+		out = B - Ai;
 	else if (bit_or)
-		out = Bi | A;
+		out = B | Ai;
 	else if (bit_and)
-		out = Bi & A;
+		out = B & Ai;
 	else if (bit_eor)
-		out = Bi ^ A;
+		out = B ^ Ai;
+	else if (pass_B)
+		out = B;
 	else
-		out = A;
+		out = Ai;
 end
 
 endmodule
