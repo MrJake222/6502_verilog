@@ -102,30 +102,29 @@ reg [7:0] X;
 reg [7:0] Y;
 reg [7:0] S;
 
-reg alu_add;
+/*reg alu_add;
 reg alu_sub;
 reg alu_or;
 reg alu_and;
 reg alu_eor;
-reg alu_inc;
-reg [7:0] ALU_A;
-reg [7:0] ALU_B;
-wire [7:0] alu_val;
+reg alu_inc;*/
+reg [7:0] alu_A;
+reg [7:0] alu_B;
+wire [7:0] alu_out;
 
 // ALU
 CPU_ALU ALU (
-	.add(alu_add),
-	.sub(alu_sub),
-	.bit_or(alu_or),
-	.bit_and(alu_and),
-	.bit_eor(alu_eor),
+	    .add(cu_alu_add),
+	    .sub(cu_alu_sub),
+	 .bit_or(cu_alu_or),
+	.bit_and(cu_alu_and),
+	.bit_eor(cu_alu_eor),
+	  .inc_A(cu_alu_inc),
 	
-	.inc_A(alu_inc),
+	.A(alu_A),
+	.B(alu_B),
 	
-	.A(ALU_A),
-	.B(ALU_B),
-	
-	.out(alu_val)
+	.out(alu_out)
 );
 
 // Logic
@@ -133,47 +132,48 @@ CPU_ALU ALU (
 // RAMS = reset addr mode state (positive logic)
 wire [7:0] RAMS = { ~n_reset, cu_adr_mode, state };
 
+/*
+ * state, PC helpers
+ */
 task set_PC_adr_bus(input [15:0] val);
-begin
 	PC <= val;
 	adr_bus <= val;
-end
 endtask
 
 task set_PC_adr_bus_inc();
-begin
 	set_PC_adr_bus(PC + 1);
-end
 endtask
 
 task state_inc();
-begin
 	state <= state + 1;
-end
 endtask
 
 task state_reset();
-begin
 	state <= 0;
-end
 endtask
 
+/*
+ * end-of-state helper functions
+ */
+// used on intermediate state (not final)
+// increments state & PC
 task next();
-begin
 	state_inc();
 	set_PC_adr_bus_inc();
-end
 endtask
 
+// used on final state
+// increments PC, but resets state and RW
 task next_rst();
-begin
 	state_reset();
 	set_PC_adr_bus_inc();
 	RW <= `RW_READ;
-end
 endtask
 
-task next_state();
+// used on intermediate state (not final)
+// but when address bus is loaded with something (stack, abs address)
+// doesn't increment and push out PC
+task next_state_only();
 begin
 	state_inc();
 end
@@ -189,103 +189,77 @@ begin
 		set_PC_adr_bus(16'h8000);
 		RW <= `RW_READ;
 		state <= 0;
-	
-		// exceptional conditions
-		//PC_no_inc <= 0;
-		//PC_no_drive_bus <= 0;
-		//state_reset <= 1;
-		//instr_execute <= 0;
 	end else
 	begin
 
-		/*if (state_reset)
-		begin
-			state_reset <= 0;
-			state <= 0;
-			RW <= `RW_READ;
-		end else
-		begin*/
-			casex (RAMS)
-				{1'b0, `ADR_DONT_CARE, 3'd0}:
-				begin
-					IR <= data_bus_in;
-					next();
-				end
+		casex (RAMS)
+			{1'b0, `ADR_DONT_CARE, 3'd0}:
+			begin
+				IR <= data_bus_in;
+				next();
 				
-				/* --------------------- Absolute addressing --------------------- */
-				{1'b0, `ADR_ABS, 3'd1}:
-				begin
-					adr_low <= data_bus_in;
-					//PC_no_drive_bus <= 1;
-					//PC_no_inc <= 1;
-					next();
-				end
-				
-				{1'b0, `ADR_ABS, 3'd2}:
-				begin
-					adr_bus <= { data_bus_in, adr_low };
-					//state_reset <= 1;
-					
-					if (cu_to_mem)
-					begin
-						// write to memory
-						// CPU only provides data
-						RW <= `RW_WRITE;
-						if (cu_from_A) data_bus_out_buf <= A;
-						if (cu_from_X) data_bus_out_buf <= X;
-						if (cu_from_Y) data_bus_out_buf <= Y;
-						if (cu_from_S) data_bus_out_buf <= S;
-						
-					end else
-					begin
-						// read from memory
-						// need to perform the read on the next cycle
-						//instr_execute <= 1;
-					end
-					
-					// next();
-					next_state();
-				end
-				
-				{1'b0, `ADR_ABS, 3'd3}:
-				begin
-					if (cu_to_A) A <= data_bus_in;
-					if (cu_to_X) X <= data_bus_in;
-					if (cu_to_Y) Y <= data_bus_in;
-					if (cu_to_S) S <= data_bus_in;
-					
-					next_rst();
-				end
-				
-				/* --------------------- Immediate addressing --------------------- */
-				{1'b0, `ADR_IMM, 3'd1}:
-				begin
-					//state_reset <= 1; // TODO this needs to be earlier
-					
-					if (cu_to_A) A <= data_bus_in; // TODO write to alu, single statement or task
-					if (cu_to_X) X <= data_bus_in;
-					if (cu_to_Y) Y <= data_bus_in;
-					if (cu_to_S) S <= data_bus_in;
-					
-					next_rst();
-				end
-			endcase
-		
-			//state <= state + 1;
-		//end
-		
-		
-		
-		
-		/*if (instr_execute)
-		begin
-			instr_execute <= 0;
+				// writeback ALU -> registers
+				if (cu_to_A) A <= alu_out;
+				if (cu_to_X) X <= alu_out;
+				if (cu_to_Y) Y <= alu_out;
+				if (cu_to_S) S <= alu_out;
+			end
 			
-			if (cu_to_A) A <= data_bus_in;
-			if (cu_to_X) X <= data_bus_in;
-			if (cu_to_Y) Y <= data_bus_in;
-			if (cu_to_S) S <= data_bus_in;
-		end*/
+			
+			/* --------------------- Absolute addressing --------------------- */
+			{1'b0, `ADR_ABS, 3'd1}:
+			begin
+				adr_low <= data_bus_in;
+				next();
+			end
+			
+			{1'b0, `ADR_ABS, 3'd2}:
+			begin
+				adr_bus <= { data_bus_in, adr_low };
+				next_state_only();
+
+				if (cu_to_mem)
+				begin
+					// write to memory
+					// CPU only provides data
+					RW <= `RW_WRITE;
+					if (cu_from_A) data_bus_out_buf <= A;
+					if (cu_from_X) data_bus_out_buf <= X;
+					if (cu_from_Y) data_bus_out_buf <= Y;
+					if (cu_from_S) data_bus_out_buf <= S;
+					
+				end else
+				begin
+					// read from memory
+					// need to perform the read on the next cycle
+				end
+			end
+			
+			{1'b0, `ADR_ABS, 3'd3}:
+			begin
+				alu_A <= data_bus_in;
+				if (cu_from_A) alu_B <= A;
+				if (cu_from_X) alu_B <= X;
+				if (cu_from_Y) alu_B <= Y;
+				if (cu_from_S) alu_B <= S;
+				
+				next_rst();
+			end
+			
+			
+			/* --------------------- Immediate addressing --------------------- */
+			{1'b0, `ADR_IMM, 3'd1}:
+			begin				
+				alu_A <= data_bus_in;
+				if (cu_from_A) alu_B <= A;
+				if (cu_from_X) alu_B <= X;
+				if (cu_from_Y) alu_B <= Y;
+				if (cu_from_S) alu_B <= S;
+				
+				next_rst();
+			end
+
+		endcase
 	end
 end
 

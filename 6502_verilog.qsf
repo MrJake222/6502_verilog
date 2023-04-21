@@ -443,6 +443,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[32]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[33]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[34]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to GPIO[35]
+set_global_assignment -name SYSTEMVERILOG_FILE blocks/cpu.sv
 set_global_assignment -name VERILOG_FILE blocks/cpu_bus_buffer.v
 set_global_assignment -name VERILOG_FILE blocks/cpu_counter.v
 set_global_assignment -name BDF_FILE main.bdf
@@ -454,7 +455,6 @@ set_global_assignment -name QIP_FILE blocks/vga_char_ram.qip
 set_global_assignment -name QIP_FILE blocks/vga_char_rom.qip
 set_global_assignment -name VERILOG_FILE blocks/vga.v
 set_global_assignment -name VERILOG_FILE blocks/demux_3bit.v
-set_global_assignment -name VERILOG_FILE blocks/cpu.v
 set_global_assignment -name VERILOG_FILE blocks/hex.v
 set_global_assignment -name VERILOG_FILE blocks/rom.v
 set_global_assignment -name VERILOG_FILE blocks/clk_manual.v
