@@ -294,4 +294,12 @@ begin
 	end
 end
 
+// debug
+assign dbg_PC_val = PC;
+assign dbg_IR_val = IR;
+assign dbg_A_val = A;
+assign dbg_X_val = X;
+assign dbg_Y_val = Y;
+assign dbg_S_val = S;
+
 endmodule
