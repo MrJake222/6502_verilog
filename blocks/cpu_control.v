@@ -128,6 +128,8 @@ begin
 		adr_mode = `ADR_ABS_JSR;
 	else if (IR == 8'h6C)
 		adr_mode = `ADR_ABS_IND;
+	else if (IR == 8'h4C)
+		adr_mode = `ADR_ABS_JMP;
 	else casex (IR)
 	// IR = aaa bbb cc
 	// b odd -- well defined

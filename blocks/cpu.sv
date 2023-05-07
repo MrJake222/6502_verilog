@@ -366,19 +366,28 @@ begin
 				alu_pass_B <= 0;
 			end
 			
-			/* --------------------- Absolute addressing --------------------- */
+			/* --------------------- Absolute --------------------- */
 			{1'b0, `ADR_ABS, 3'd1}: addr_abs_step_1();
 			{1'b0, `ADR_ABS, 3'd2}: addr_abs_step_2();
 			{1'b0, `ADR_ABS, 3'd3}: exec_step_3();
 			
 			
-			/* --------------------- Absolute addressing RMW --------------------- */
+			/* --------------------- Absolute RMW --------------------- */
 			{1'b0, `ADR_ABS_RMW, 3'd1}: addr_abs_step_1();
 			{1'b0, `ADR_ABS_RMW, 3'd2}: addr_abs_step_2();
 			{1'b0, `ADR_ABS_RMW, 3'd3}: exec_rmw_step_3();
 			{1'b0, `ADR_ABS_RMW, 3'd4}: exec_rmw_step_4();
 			{1'b0, `ADR_ABS_RMW, 3'd5}: exec_rmw_step_5();
 			
+			
+			/* --------------------- Absolute JMP --------------------- */
+			{1'b0, `ADR_ABS_JMP, 3'd1}: addr_abs_step_1();
+			{1'b0, `ADR_ABS_JMP, 3'd2}:
+			begin
+				set_PC_adr_bus({data_bus_in, adr_low});
+				state_reset();
+			end
+
 			
 			/* ---------------------  Absolute indexed --------------------- */
 			{1'b0, `ADR_ABS_X_Y, 3'd1}: addr_abs_xy_step_1();
@@ -394,7 +403,7 @@ begin
 			{1'b0, `ADR_ABS_X_RMW, 3'd5}: exec_rmw_step_5();
 			
 			
-			/* --------------------- Accumulator addressing --------------------- */
+			/* --------------------- Accumulator --------------------- */
 			{1'b0, `ADR_ACCUM, 3'd1}:
 			begin
 				alu_latch();
@@ -402,7 +411,7 @@ begin
 			end
 			
 			
-			/* --------------------- Immediate addressing --------------------- */
+			/* --------------------- Immediate --------------------- */
 			{1'b0, `ADR_IMM, 3'd1}:
 			begin
 				alu_latch();
