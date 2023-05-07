@@ -43,18 +43,11 @@ wire cu_to_X;
 wire cu_from_Y;
 wire cu_to_Y;
 wire cu_from_S;
-
 wire cu_to_S;
-// memory read/write
-// buffer direction control
-wire cu_from_mem;   // any data required from memory (for reg_to_mem) or ALU operation?
-wire cu_to_mem;     // any data needs to be written to memory?
 
-// datapath control
-wire cu_reg_to_mem; // direct write from register to memory
-wire cu_reg_to_reg; // internal register transfer
-wire cu_mem_to_reg; // direct read from memory to register
-wire cu_mem_to_mem;
+// memory read/write
+wire cu_from_mem;
+wire cu_to_mem;
 
 // alu control
 wire cu_alu_inc;
@@ -80,9 +73,6 @@ CPU_control CU (IR,
 	cu_from_S, cu_to_S, 
 
 	cu_from_mem, cu_to_mem, 
-	
-	cu_reg_to_mem, cu_reg_to_reg,
-	cu_mem_to_reg, cu_mem_to_mem, 
 
 	cu_alu_inc, cu_alu_dec,
 	cu_alu_or, cu_alu_and,

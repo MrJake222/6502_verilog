@@ -23,17 +23,9 @@ module CPU_control (
 	output wire from_S,
 	output wire to_S,
 	
-	// memory read/write
-	// buffer direction control
-	output wire from_mem,   // any data required from memory (for reg_to_mem) or ALU operation?
-	output wire to_mem,     // any data needs to be written to memory?
-	
-	// datapath control
-	output wire reg_to_mem, // direct write from register to memory
-	output wire reg_to_reg, // internal register transfer
-	output wire mem_to_reg, // direct read from memory to register
-	output wire mem_to_mem,
-	
+	// memory direction (where applicable, Read-Modify-Write)
+	output wire from_mem,
+	output wire to_mem,
 	
 	// alu control
 	output wire alu_inc,
@@ -66,10 +58,14 @@ reg INY;
 reg DEX;
 reg DEY;
 
-// reg ASL_mem;
-// reg ROL_mem;
-// reg LSR_mem;
-// reg ROR_mem;
+reg ASL_mem;
+reg ASL_A;
+reg ROL_mem;
+reg ROL_A;
+reg LSR_mem;
+reg LSR_A;
+reg ROR_mem;
+reg ROR_A;
 
 reg TAY;
 reg TYA;
@@ -93,12 +89,6 @@ assign to_S   = TXS;
 // memory read/write
 assign from_mem = LDA | LDX | LDY | CMP | CPX | CPY | ORA | AND | EOR | ADC | SBC;
 assign to_mem   = STA | STX | STY;
-
-// datapath control
-assign reg_to_mem = STA | STX | STY;
-assign reg_to_reg = INX | DEX | INY | DEY | TAY | TAX | TYA | TXA | TAX | TSX | TXS;
-assign mem_to_reg = LDA | LDX | LDY;
-assign mem_to_mem = 0;
 
 // alu control
 assign alu_inc = INX | INY;
