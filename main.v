@@ -14,8 +14,8 @@
 // https://fpgasoftware.intel.com/eula.
 
 // PROGRAM		"Quartus Prime"
-// VERSION		"Version 22.1std.0 Build 915 10/25/2022 SC Lite Edition"
-// CREATED		"Wed Apr 19 20:03:46 2023"
+// VERSION		"Version 21.1.1 Build 850 06/23/2022 SJ Lite Edition"
+// CREATED		"Sun May  7 15:30:06 2023"
 
 module main(
 	MAX10_CLK1_50,

@@ -3,7 +3,7 @@
 module CPU_control (
 	input wire [7:0] IR,			// instruction register
 	
-	output reg [3:0] adr_mode,	// alu_address mode
+	output reg [4:0] adr_mode,	// alu_address mode
 	output reg index,			// index register (when indexed mode)
 	
 	output reg branch,			// conditional branch
@@ -114,29 +114,55 @@ always @*
 begin
 
 	if (IR == 8'h20)
-		adr_mode = `ADR_ABS;
+		adr_mode = `ADR_ABS_JSR;
 	else if (IR == 8'h6C)
-		adr_mode = `ADR_IND;
+		adr_mode = `ADR_ABS_IND;
 	else casex (IR)
 	// IR = aaa bbb cc
 	// b odd -- well defined
-		8'bxxx_001_xx: adr_mode = `ADR_ZPG;
-		8'bxxx_011_xx: adr_mode = `ADR_ABS; // 6C -> IND
-		8'bxxx_101_xx: adr_mode = `ADR_ZPG_I;
-		8'bxxx_111_xx: adr_mode = `ADR_ABS_I;
+		8'bxxx_001_0x,
+		8'b10x_001_1x: adr_mode = `ADR_ZPG;
+		8'b0xx_001_1x,
+		8'b11x_001_1x: adr_mode = `ADR_ZPG_RMW;
+		
+		8'bxxx_011_0x, // 4C, 6C -> see above if
+		8'b10x_011_1x: adr_mode = `ADR_ABS;
+		8'b0xx_011_1x,
+		8'b11x_011_1x: adr_mode = `ADR_ABS_RMW;
+		
+		8'bxxx_101_0x,
+		8'b10x_101_1x: adr_mode = `ADR_ZPG_X_Y;
+		8'b0xx_101_1x,
+		8'b11x_101_1x: adr_mode = `ADR_ZPG_X_RMW;
+		
+		8'bxxx_111_0x,
+		8'b10x_111_1x: adr_mode = `ADR_ABS_X_Y;
+		8'b0xx_111_1x,
+		8'b11x_111_1x: adr_mode = `ADR_ABS_X_RMW;
+		
 	
 	// center (arithmetic instructions)
-		8'bxxx_000_x1: adr_mode = `ADR_X_IND;
+		8'bxxx_000_x1: adr_mode = `ADR_ABS_X_IND;
 		8'bxxx_010_x1: adr_mode = `ADR_IMM;
-		8'bxxx_100_x1: adr_mode = `ADR_IND_Y;
-		8'bxxx_110_x1: adr_mode = `ADR_ABS_I;
+		8'bxxx_100_x1: adr_mode = `ADR_ZPG_IND_Y;
+		8'bxxx_110_x1: adr_mode = `ADR_ABS_X_Y;
 		
 	// other
 		8'bxxx_100_00: adr_mode = `ADR_REL; // b=4 c=0 
 		8'b1xx_000_x0: adr_mode = `ADR_IMM; // a>=4 b=0 c=even (LDX/Y CPY)
-		8'b0xx_000_x0: adr_mode = `ADR_IMPL;// a<4 b=0 c=even 	20 -> ABS
 		
-		8'bxxx_x10_x0: adr_mode = `ADR_IMPL;// b=(2,6) c=even (stack, INC/DEC, transfers, ROL/Rs)
+		8'b000_000_x0: adr_mode = `ADR_STACK_BRK;
+		8'b001_000_x0: adr_mode = `ADR_ABS_JSR;
+		8'b010_000_x0: adr_mode = `ADR_STACK_RTI;
+		8'b011_000_x0: adr_mode = `ADR_STACK_RTS;
+		
+		8'b1xx_x10_x0: adr_mode = `ADR_IMPL;
+		
+		8'b0x0_010_00: adr_mode = `ADR_STACK_PH;
+		8'b0x1_010_00: adr_mode = `ADR_STACK_PL;
+		
+		8'b0xx_110_00: adr_mode = `ADR_IMPL;
+		8'b0xx_x10_10: adr_mode = `ADR_ACCUM;
 		
 		default:
 			adr_mode = `ADR_INVAL;

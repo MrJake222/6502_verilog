@@ -28,7 +28,7 @@ assign data_bus_out = RW ? 8'hZZ : data_bus_out_buf;
 `define RW_WRITE	1'b0
 
 // ------------ address mode ------------ //
-wire [3:0] cu_adr_mode;
+wire [4:0] cu_adr_mode;
 wire cu_index; // X/Y
 
 // ------------ instruction ------------ //
@@ -140,7 +140,7 @@ endtask
 // Logic
 // gluing together reset, address mode and current state
 // RAMS = reset addr mode state (positive logic)
-wire [7:0] RAMS = { ~n_reset, cu_adr_mode, state };
+wire [8:0] RAMS = { ~n_reset, cu_adr_mode, state };
 
 /*
  * state, PC helpers
