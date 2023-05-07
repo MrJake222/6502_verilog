@@ -17,7 +17,8 @@ add wave -position insertpoint -color "cyan" -label "PC val" sim:/main/b2v_CPU0/
 
 #add wave -position insertpoint -color "olive" -label state_reset sim:/main/b2v_CPU0/state_reset
 add wave -position insertpoint -color "olive" -label state sim:/main/b2v_CPU0/state
-add wave -position insertpoint -color "olive" -label RAMS sim:/main/b2v_CPU0/RAMS
+#add wave -position insertpoint -color "olive" -label RAMS sim:/main/b2v_CPU0/RAMS
+add wave -position insertpoint -color "olive" -radix dec -label adr_mode sim:/main/b2v_CPU0/cu_adr_mode
 
 add wave -position insertpoint -color "green yellow" -label adr sim:/main/b2v_CPU0/adr_bus
 add wave -position insertpoint -color "green" -label RW sim:/main/b2v_CPU0/RW

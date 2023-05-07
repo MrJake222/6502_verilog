@@ -34,7 +34,10 @@ module CPU_control (
 	output wire alu_and,
 	output wire alu_eor,
 	output wire alu_add,
-	output wire alu_sub
+	output wire alu_sub,
+	output wire alu_shift_l,
+	output wire alu_shift_r,
+	output wire alu_shift_carry_in
 );
 
 // comb outputs
@@ -55,17 +58,19 @@ reg CPX;
 reg CPY;
 reg INX;
 reg INY;
+reg INC;
 reg DEX;
 reg DEY;
+reg DEC;
 
-reg ASL_mem;
 reg ASL_A;
-reg ROL_mem;
+reg ASL_mem;
 reg ROL_A;
-reg LSR_mem;
+reg ROL_mem;
 reg LSR_A;
-reg ROR_mem;
+reg LSR_mem;
 reg ROR_A;
+reg ROR_mem;
 
 reg TAY;
 reg TYA;
@@ -77,8 +82,8 @@ reg TSX;
 
 // output logic
 // register read/write
-assign from_A = STA | CMP             | TAY | TAX | ORA | AND | EOR | ADC | SBC;
-assign to_A   = LDA                   | TYA | TXA | ORA | AND | EOR | ADC | SBC;
+assign from_A = STA | CMP             | TAY | TAX | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A;
+assign to_A   = LDA                   | TYA | TXA | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A;
 assign from_X = STX | CPX | INX | DEX | TXA | TXS;
 assign to_X   = LDX       | INX | DEX | TAX | TSX;
 assign from_Y = STY | CPY | INY | DEY | TYA;
@@ -91,13 +96,16 @@ assign from_mem = LDA | LDX | LDY | CMP | CPX | CPY | ORA | AND | EOR | ADC | SB
 assign to_mem   = STA | STX | STY;
 
 // alu control
-assign alu_inc = INX | INY;
-assign alu_dec = DEX | DEY;
+assign alu_inc = INX | INY | INC;
+assign alu_dec = DEX | DEY | DEC;
 assign alu_or  = ORA;
 assign alu_and = AND;
 assign alu_eor = EOR;
 assign alu_add = ADC;
 assign alu_sub = SBC | CMP | CPY | CPX;
+assign alu_shift_l = ASL_A | ASL_mem | ROL_A | ROL_mem;
+assign alu_shift_r = LSR_A | LSR_mem | ROR_A | ROR_mem;
+assign alu_shift_carry_in = ROL_A | ROL_mem | ROR_A | ROR_mem;
 
 
 // helper wires
@@ -337,6 +345,12 @@ begin
 	endcase
 	
 	casex (IR)
+		8'b111_xx1_10:
+			INC = 1;
+		default: INC = 0;
+	endcase
+	
+	casex (IR)
 		8'hCA:   DEX = 1;
 		default: DEX = 0;
 	endcase
@@ -344,6 +358,12 @@ begin
 	casex (IR)
 		8'h88:   DEY = 1;
 		default: DEY = 0;
+	endcase
+	
+	casex (IR)
+		8'b110_xx1_10:
+			DEC = 1;
+		default: DEC = 0;
 	endcase
 end
 
@@ -379,6 +399,55 @@ begin
 		8'hBA:   TSX = 1;
 		default: TSX = 0;
 	endcase
+end
+
+// shifts
+always @*
+begin
+	casex (IR)
+		8'b000_xxx_10: begin
+			ASL_A   = ~IR[2];
+			ASL_mem =  IR[2];
+		end
+		default: begin
+			ASL_A = 0;
+			ASL_mem = 0;
+		end
+	endcase
+
+	casex (IR)
+		8'b001_xxx_10: begin
+			ROL_A   = ~IR[2];
+			ROL_mem =  IR[2];
+		end
+		default: begin
+			ROL_A = 0;
+			ROL_mem = 0;
+		end
+	endcase
+
+	casex (IR)
+		8'b010_xxx_10: begin
+			LSR_A   = ~IR[2];
+			LSR_mem =  IR[2];
+		end
+		default: begin
+			LSR_A = 0;
+			LSR_mem = 0;
+		end
+	endcase
+
+	casex (IR)
+		8'b011_xxx_10: begin
+			ROR_A   = ~IR[2];
+			ROR_mem =  IR[2];
+		end
+		default: begin
+			ROR_A = 0;
+			ROR_mem = 0;
+		end
+	endcase
+
 end
 
 endmodule

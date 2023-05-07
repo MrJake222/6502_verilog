@@ -6,9 +6,13 @@ module CPU_ALU (
 	input wire bit_or,
 	input wire bit_and,
 	input wire bit_eor,
+	input wire shift_l,
+	input wire shift_r,
+	input wire shift_carry_in,
 	
 	// default is out=A
 	input wire inc_B,  // out=B+1
+	input wire dec_B,  // out=B-1
 	input wire pass_B, // out=B
 	
 	input wire [7:0] A,
@@ -22,7 +26,7 @@ module CPU_ALU (
 reg [7:0] Ai;
 always @*
 begin	
-	if (inc_B)
+	if (inc_B | dec_B)
 		Ai = 8'h01;
 	else
 		Ai = A;
@@ -32,16 +36,28 @@ always @*
 begin
 	if (add | inc_B)
 		out = B + Ai;
-	else if (sub)
+		
+	else if (sub | dec_B)
 		out = B - Ai;
+		
 	else if (bit_or)
 		out = B | Ai;
+		
 	else if (bit_and)
 		out = B & Ai;
+		
 	else if (bit_eor)
 		out = B ^ Ai;
+		
+	else if (shift_l)
+		out = B << 1;
+		
+	else if (shift_r)
+		out = B >> 1;
+		
 	else if (pass_B)
 		out = B;
+		
 	else
 		out = Ai;
 end

@@ -57,6 +57,9 @@ wire cu_alu_and;
 wire cu_alu_eor;
 wire cu_alu_add;
 wire cu_alu_sub;
+wire cu_alu_shift_l;
+wire cu_alu_shift_r;
+wire cu_alu_shift_carry_in;
 
 reg [7:0] IR;
 
@@ -77,7 +80,10 @@ CPU_control CU (IR,
 	cu_alu_inc, cu_alu_dec,
 	cu_alu_or, cu_alu_and,
 	cu_alu_eor,
-	cu_alu_add, cu_alu_sub
+	cu_alu_add, cu_alu_sub,
+	
+	cu_alu_shift_l, cu_alu_shift_r,
+	cu_alu_shift_carry_in
 );
 
 
@@ -93,12 +99,17 @@ reg [7:0] Y;
 reg [7:0] S;
 
 
-/*reg alu_add;
+reg alu_add;
 reg alu_sub;
 reg alu_or;
 reg alu_and;
 reg alu_eor;
-reg alu_inc;*/
+reg alu_inc;
+reg alu_dec;
+reg alu_shift_l;
+reg alu_shift_r;
+reg alu_shift_carry_in;
+
 reg [7:0] alu_A;
 reg [7:0] alu_B;
 wire [7:0] alu_out;
@@ -107,12 +118,16 @@ reg alu_pass_B;
 
 // ALU
 CPU_ALU ALU (
-	    .add(cu_alu_add),
-	    .sub(cu_alu_sub),
-	 .bit_or(cu_alu_or),
-	.bit_and(cu_alu_and),
-	.bit_eor(cu_alu_eor),
-	  .inc_B(cu_alu_inc),
+	    .add(alu_add),
+	    .sub(alu_sub),
+	 .bit_or(alu_or),
+	.bit_and(alu_and),
+	.bit_eor(alu_eor),
+	  .inc_B(alu_inc),
+	  .dec_B(alu_dec),
+	.shift_l(alu_shift_l),
+	.shift_r(alu_shift_r),
+.shift_carry_in(alu_shift_carry_in),
      .pass_B(alu_pass_B),
 
 	.A(alu_A),
@@ -120,6 +135,32 @@ CPU_ALU ALU (
 	
 	.out(alu_out)
 );
+
+task alu_set_cu();
+	alu_add = cu_alu_add;
+	alu_sub = cu_alu_sub;
+	alu_or  = cu_alu_or;
+	alu_and = cu_alu_and;
+	alu_eor = cu_alu_eor;
+	alu_inc = cu_alu_inc;
+	alu_dec = cu_alu_dec;
+	alu_shift_l = cu_alu_shift_l;
+	alu_shift_r = cu_alu_shift_r;
+	alu_shift_carry_in = cu_alu_shift_carry_in;
+endtask
+
+task alu_set_add();
+	alu_add = 1;
+	alu_sub = 0;
+	alu_or  = 0;
+	alu_and = 0;
+	alu_eor = 0;
+	alu_inc = 0;
+	alu_dec = 0;
+	alu_shift_l = 0;
+	alu_shift_r = 0;
+	alu_shift_carry_in = 0;
+endtask
 
 task alu_latch();
 	alu_A <= data_bus_in;
@@ -254,14 +295,122 @@ begin
 			
 			{1'b0, `ADR_ABS, 3'd3}:
 			begin
+				alu_set_cu();
 				alu_latch();
 				next_rst();
 			end
 			
 			
+			/* --------------------- Absolute addressing RMW --------------------- */
+			{1'b0, `ADR_ABS_RMW, 3'd1}:
+			begin
+				adr_low <= data_bus_in;
+				next();
+			end
+			
+			{1'b0, `ADR_ABS_RMW, 3'd2}:
+			begin
+				adr_bus <= { data_bus_in, adr_low };
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_ABS_RMW, 3'd3}:
+			begin
+				alu_set_cu();
+				alu_B <= data_bus_in;
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_ABS_RMW, 3'd4}:
+			begin
+				RW <= `RW_WRITE;
+				data_bus_out_buf <= alu_out;
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_ABS_RMW, 3'd5}:
+			begin
+				next_rst();
+			end
+			
+			
+			/* ---------------------  Absolute indexed --------------------- */
+			{1'b0, `ADR_ABS_X_Y, 3'd1}:
+			begin
+				alu_set_add();
+				alu_A <= data_bus_in;
+				if (cu_index == `ADR_INDEX_X)
+					alu_B <= X;
+				else
+					alu_B <= Y;
+				
+				next();
+			end
+			
+			{1'b0, `ADR_ABS_X_Y, 3'd2}:
+			begin
+				// TODO carry
+				adr_bus <= { data_bus_in, alu_out };
+				next_state_only();
+				
+				if (cu_to_mem)
+					mem_write();
+			end
+			
+			{1'b0, `ADR_ABS_X_Y, 3'd3}:
+			begin
+				alu_set_cu();
+				alu_latch();
+				next_rst();
+			end
+			
+			
+			/* --------------------- Absolute indexed RMW --------------------- */
+			{1'b0, `ADR_ABS_X_RMW, 3'd1}:
+			begin
+				alu_set_add();
+				alu_A <= data_bus_in;
+				if (cu_index == `ADR_INDEX_X)
+					alu_B <= X;
+				else
+					alu_B <= Y;
+				
+				next();
+			end
+			
+			{1'b0, `ADR_ABS_X_RMW, 3'd2}:
+			begin
+				// TODO carry
+				adr_bus <= { data_bus_in, alu_out };
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_ABS_X_RMW, 3'd3}:
+			begin
+				alu_set_cu();
+				alu_B <= data_bus_in;
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_ABS_X_RMW, 3'd4}:
+			begin
+				RW <= `RW_WRITE;
+				data_bus_out_buf <= alu_out;
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_ABS_X_RMW, 3'd5}:
+			begin
+				next_rst();
+			end
+			
+			
+			/* --------------------- Accumulator addressing --------------------- */
 			/* --------------------- Immediate addressing --------------------- */
+			{1'b0, `ADR_ACCUM, 3'd1},
 			{1'b0, `ADR_IMM, 3'd1}:
-			begin				
+			begin
+				alu_set_cu();
 				alu_latch();
 				next_rst();
 			end
@@ -275,6 +424,7 @@ begin
 				// no data bus used, we use alu_pass_B in case of
 				// no inc/dec is active
 				
+				alu_set_cu();
 				alu_pass_B <= 1;
 				alu_latch();
 				
