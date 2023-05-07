@@ -163,6 +163,7 @@ task alu_set_add();
 endtask
 
 task alu_latch();
+	alu_set_cu();
 	alu_A <= data_bus_in;
 	if (cu_from_A) alu_B <= A;
 	if (cu_from_X) alu_B <= X;
@@ -248,6 +249,72 @@ task mem_write();
 endtask
 
 
+
+
+task addr_abs_step_1();
+	adr_low <= data_bus_in;
+	next();
+endtask
+
+task addr_abs_step_2();
+	adr_bus <= { data_bus_in, adr_low };
+	next_state_only();
+
+	if (cu_to_mem)
+		// write to memory
+		// CPU has to provide data this cycle
+		// (memory write is next posedge)
+		mem_write();
+	
+	// in case of read, data is fetched next cycle
+endtask
+
+
+task addr_abs_xy_step_1();
+	alu_set_add();
+	alu_A <= data_bus_in;
+	if (cu_index == `ADR_INDEX_X)
+		alu_B <= X;
+	else
+		alu_B <= Y;
+	
+	next();
+endtask
+
+task addr_abs_xy_step_2();
+	// TODO carry
+	adr_bus <= { data_bus_in, alu_out };
+	next_state_only();
+	
+	if (cu_to_mem)
+		mem_write();
+endtask
+
+
+task exec_step_3();
+	alu_latch();
+	next_rst();
+endtask
+		
+			
+task exec_rmw_step_3();
+	alu_set_cu();
+	alu_B <= data_bus_in;
+	next_state_only();
+endtask
+
+task exec_rmw_step_4();
+	RW <= `RW_WRITE;
+	data_bus_out_buf <= alu_out;
+	next_state_only();
+endtask
+
+task exec_rmw_step_5();
+	next_rst();
+endtask
+
+
+
 always @ (negedge clk)
 begin
 	
@@ -271,146 +338,45 @@ begin
 				alu_pass_B <= 0;
 			end
 			
-			
 			/* --------------------- Absolute addressing --------------------- */
-			{1'b0, `ADR_ABS, 3'd1}:
-			begin
-				adr_low <= data_bus_in;
-				next();
-			end
-			
-			{1'b0, `ADR_ABS, 3'd2}:
-			begin
-				adr_bus <= { data_bus_in, adr_low };
-				next_state_only();
-
-				if (cu_to_mem)
-					// write to memory
-					// CPU has to provide data this cycle
-					// (memory write is next posedge)
-					mem_write();
-				
-				// in case of read, data is fetched next cycle
-			end
-			
-			{1'b0, `ADR_ABS, 3'd3}:
-			begin
-				alu_set_cu();
-				alu_latch();
-				next_rst();
-			end
+			{1'b0, `ADR_ABS, 3'd1}: addr_abs_step_1();
+			{1'b0, `ADR_ABS, 3'd2}: addr_abs_step_2();
+			{1'b0, `ADR_ABS, 3'd3}: exec_step_3();
 			
 			
 			/* --------------------- Absolute addressing RMW --------------------- */
-			{1'b0, `ADR_ABS_RMW, 3'd1}:
-			begin
-				adr_low <= data_bus_in;
-				next();
-			end
-			
-			{1'b0, `ADR_ABS_RMW, 3'd2}:
-			begin
-				adr_bus <= { data_bus_in, adr_low };
-				next_state_only();
-			end
-			
-			{1'b0, `ADR_ABS_RMW, 3'd3}:
-			begin
-				alu_set_cu();
-				alu_B <= data_bus_in;
-				next_state_only();
-			end
-			
-			{1'b0, `ADR_ABS_RMW, 3'd4}:
-			begin
-				RW <= `RW_WRITE;
-				data_bus_out_buf <= alu_out;
-				next_state_only();
-			end
-			
-			{1'b0, `ADR_ABS_RMW, 3'd5}:
-			begin
-				next_rst();
-			end
+			{1'b0, `ADR_ABS_RMW, 3'd1}: addr_abs_step_1();
+			{1'b0, `ADR_ABS_RMW, 3'd2}: addr_abs_step_2();
+			{1'b0, `ADR_ABS_RMW, 3'd3}: exec_rmw_step_3();
+			{1'b0, `ADR_ABS_RMW, 3'd4}: exec_rmw_step_4();
+			{1'b0, `ADR_ABS_RMW, 3'd5}: exec_rmw_step_5();
 			
 			
 			/* ---------------------  Absolute indexed --------------------- */
-			{1'b0, `ADR_ABS_X_Y, 3'd1}:
-			begin
-				alu_set_add();
-				alu_A <= data_bus_in;
-				if (cu_index == `ADR_INDEX_X)
-					alu_B <= X;
-				else
-					alu_B <= Y;
-				
-				next();
-			end
-			
-			{1'b0, `ADR_ABS_X_Y, 3'd2}:
-			begin
-				// TODO carry
-				adr_bus <= { data_bus_in, alu_out };
-				next_state_only();
-				
-				if (cu_to_mem)
-					mem_write();
-			end
-			
-			{1'b0, `ADR_ABS_X_Y, 3'd3}:
-			begin
-				alu_set_cu();
-				alu_latch();
-				next_rst();
-			end
+			{1'b0, `ADR_ABS_X_Y, 3'd1}: addr_abs_xy_step_1();
+			{1'b0, `ADR_ABS_X_Y, 3'd2}: addr_abs_xy_step_2();
+			{1'b0, `ADR_ABS_X_Y, 3'd3}: exec_step_3();
 			
 			
 			/* --------------------- Absolute indexed RMW --------------------- */
-			{1'b0, `ADR_ABS_X_RMW, 3'd1}:
-			begin
-				alu_set_add();
-				alu_A <= data_bus_in;
-				if (cu_index == `ADR_INDEX_X)
-					alu_B <= X;
-				else
-					alu_B <= Y;
-				
-				next();
-			end
-			
-			{1'b0, `ADR_ABS_X_RMW, 3'd2}:
-			begin
-				// TODO carry
-				adr_bus <= { data_bus_in, alu_out };
-				next_state_only();
-			end
-			
-			{1'b0, `ADR_ABS_X_RMW, 3'd3}:
-			begin
-				alu_set_cu();
-				alu_B <= data_bus_in;
-				next_state_only();
-			end
-			
-			{1'b0, `ADR_ABS_X_RMW, 3'd4}:
-			begin
-				RW <= `RW_WRITE;
-				data_bus_out_buf <= alu_out;
-				next_state_only();
-			end
-			
-			{1'b0, `ADR_ABS_X_RMW, 3'd5}:
-			begin
-				next_rst();
-			end
+			{1'b0, `ADR_ABS_X_RMW, 3'd1}: addr_abs_xy_step_1();
+			{1'b0, `ADR_ABS_X_RMW, 3'd2}: addr_abs_xy_step_2();
+			{1'b0, `ADR_ABS_X_RMW, 3'd3}: exec_rmw_step_3();
+			{1'b0, `ADR_ABS_X_RMW, 3'd4}: exec_rmw_step_4();
+			{1'b0, `ADR_ABS_X_RMW, 3'd5}: exec_rmw_step_5();
 			
 			
 			/* --------------------- Accumulator addressing --------------------- */
+			{1'b0, `ADR_ACCUM, 3'd1}:
+			begin
+				alu_latch();
+				next_rst_no_PC();
+			end
+			
+			
 			/* --------------------- Immediate addressing --------------------- */
-			{1'b0, `ADR_ACCUM, 3'd1},
 			{1'b0, `ADR_IMM, 3'd1}:
 			begin
-				alu_set_cu();
 				alu_latch();
 				next_rst();
 			end
@@ -424,10 +390,9 @@ begin
 				// no data bus used, we use alu_pass_B in case of
 				// no inc/dec is active
 				
-				alu_set_cu();
 				alu_pass_B <= 1;
-				alu_latch();
 				
+				alu_latch();
 				next_rst_no_PC();
 			end
 		endcase
