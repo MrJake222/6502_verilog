@@ -179,6 +179,14 @@ task alu_writeback();
 endtask
 
 
+task mem_write();
+	RW <= `RW_WRITE;
+	if (cu_from_A) data_bus_out_buf <= A;
+	if (cu_from_X) data_bus_out_buf <= X;
+	if (cu_from_Y) data_bus_out_buf <= Y;
+	if (cu_from_S) data_bus_out_buf <= S;
+endtask
+
 // Logic
 // gluing together reset, address mode and current state
 // RAMS = reset addr mode state (positive logic)
@@ -209,56 +217,50 @@ endtask
  * end-of-state helper functions
  */
 // used on intermediate state (not final)
-// increments state & PC
-task next();
+// increments state & PC, puts incremented PC on bus
+task next_consume_put();
 	state_inc();
 	set_PC_adr_bus_inc();
 endtask
 
-// used on final state
-// increments PC, resets state and RW
-task next_rst();
+// doesn't put PC on bus
+// useful when consuming operand but not needing next operand
+task next_consume();
+	state_inc();
+	PC <= PC + 1;
+endtask
+
+// ...
+task next_rst_consume();
 	state_reset();
 	set_PC_adr_bus_inc();
 	RW <= `RW_READ;
 endtask
 
 // used on final state
-// doesn't increment PC, resets state and RW
-// used for example in implied mode when operand is not used
-task next_rst_no_PC();
+// doesn't increment PC (but puts it on address bus), resets state and RW
+task next_rst();
+	adr_bus <= PC;
 	state_reset();
 	RW <= `RW_READ;
 endtask
 
 // used on intermediate state (not final)
-// but when address bus is loaded with something (stack, abs address)
-// doesn't increment and push out PC
+// doesn'y consume any operands
 task next_state_only();
 	state_inc();
 endtask
 
 
 
-task mem_write();
-	RW <= `RW_WRITE;
-	if (cu_from_A) data_bus_out_buf <= A;
-	if (cu_from_X) data_bus_out_buf <= X;
-	if (cu_from_Y) data_bus_out_buf <= Y;
-	if (cu_from_S) data_bus_out_buf <= S;
-endtask
-
-
-
-
 task addr_abs_step_1();
 	adr_low <= data_bus_in;
-	next();
+	next_consume_put();
 endtask
 
 task addr_abs_step_2();
 	adr_bus <= { data_bus_in, adr_low };
-	next_state_only();
+	next_consume();
 
 	if (cu_to_mem)
 		// write to memory
@@ -278,13 +280,13 @@ task addr_abs_xy_step_1();
 	else
 		alu_B <= Y;
 	
-	next();
+	next_consume_put();
 endtask
 
 task addr_abs_xy_step_2();
 	// TODO carry
 	adr_bus <= { data_bus_in, alu_out };
-	next_state_only();
+	next_consume();
 	
 	if (cu_to_mem)
 		mem_write();
@@ -332,7 +334,7 @@ begin
 			{1'b0, `ADR_DONT_CARE, 3'd0}:
 			begin
 				IR <= data_bus_in;
-				next();
+				next_consume_put();
 				
 				alu_writeback();
 				alu_pass_B <= 0;
@@ -370,7 +372,7 @@ begin
 			{1'b0, `ADR_ACCUM, 3'd1}:
 			begin
 				alu_latch();
-				next_rst_no_PC();
+				next_rst();
 			end
 			
 			
@@ -378,7 +380,7 @@ begin
 			{1'b0, `ADR_IMM, 3'd1}:
 			begin
 				alu_latch();
-				next_rst();
+				next_rst_consume();
 			end
 			
 			
@@ -393,7 +395,20 @@ begin
 				alu_pass_B <= 1;
 				
 				alu_latch();
-				next_rst_no_PC();
+				next_rst();
+			end
+		
+			/* --------------------- Stack --------------------- */
+			{1'b0, `ADR_STACK_PH, 3'd1}:
+			begin
+				adr_bus <= { 8'h01, S };
+				mem_write();
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_STACK_PH, 3'd2}:
+			begin
+				next_rst();
 			end
 		endcase
 	end
