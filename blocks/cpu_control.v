@@ -79,11 +79,14 @@ reg TAX;
 reg TXS;
 reg TSX;
 
+reg PHA;
+reg PLA;
+
 
 // output logic
 // register read/write
-assign from_A = STA | CMP             | TAY | TAX | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A;
-assign to_A   = LDA                   | TYA | TXA | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A;
+assign from_A = STA | CMP             | TAY | TAX | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A | PHA;
+assign to_A   = LDA                   | TYA | TXA | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A | PLA;
 assign from_X = STX | CPX | INX | DEX | TXA | TXS;
 assign to_X   = LDX       | INX | DEX | TAX | TSX;
 assign from_Y = STY | CPY | INY | DEY | TYA;
@@ -447,7 +450,21 @@ begin
 			ROR_mem = 0;
 		end
 	endcase
+end
 
+// stack
+// register transfers
+always @*
+begin
+	casex (IR)
+		8'h48:   PHA = 1;
+		default: PHA = 0;
+	endcase
+
+	casex (IR)
+		8'h68:   PLA = 1;
+		default: PLA = 0;
+	endcase
 end
 
 endmodule

@@ -162,6 +162,32 @@ task alu_set_add();
 	alu_shift_carry_in = 0;
 endtask
 
+task alu_set_inc();
+	alu_add = 0;
+	alu_sub = 0;
+	alu_or  = 0;
+	alu_and = 0;
+	alu_eor = 0;
+	alu_inc = 1;
+	alu_dec = 0;
+	alu_shift_l = 0;
+	alu_shift_r = 0;
+	alu_shift_carry_in = 0;
+endtask
+
+task alu_set_dec();
+	alu_add = 0;
+	alu_sub = 0;
+	alu_or  = 0;
+	alu_and = 0;
+	alu_eor = 0;
+	alu_inc = 0;
+	alu_dec = 1;
+	alu_shift_l = 0;
+	alu_shift_r = 0;
+	alu_shift_carry_in = 0;
+endtask
+
 task alu_latch();
 	alu_set_cu();
 	alu_A <= data_bus_in;
@@ -398,16 +424,46 @@ begin
 				next_rst();
 			end
 		
-			/* --------------------- Stack --------------------- */
+		
+			/* --------------------- Stack push --------------------- */
 			{1'b0, `ADR_STACK_PH, 3'd1}:
 			begin
 				adr_bus <= { 8'h01, S };
 				mem_write();
+				
+				alu_B <= S;
+				alu_set_dec();
+				
 				next_state_only();
 			end
 			
 			{1'b0, `ADR_STACK_PH, 3'd2}:
 			begin
+				S <= alu_out;
+				next_rst();
+			end
+			
+			
+			/* --------------------- Stack pull --------------------- */
+			{1'b0, `ADR_STACK_PL, 3'd1}:
+			begin
+				alu_B <= S;
+				alu_set_inc();
+				
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_STACK_PL, 3'd2}:
+			begin
+				adr_bus <= { 8'h01, alu_out };
+				
+				S <= alu_out;
+				next_state_only();
+			end
+			
+			{1'b0, `ADR_STACK_PL, 3'd3}:
+			begin
+				alu_latch();
 				next_rst();
 			end
 		endcase
