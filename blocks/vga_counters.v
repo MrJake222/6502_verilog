@@ -1,6 +1,7 @@
 module VGA_counters (
 	input wire clk,
 	input wire n_reset,
+    
 	output wire [8:0] pix,
 	output wire [8:0] line,
 	output reg h_sync,
@@ -12,7 +13,7 @@ module VGA_counters (
 // usable 400x300, pixel clock (clk) 20MHz
 
 reg [1:0] v_area; // v_area[0] horizontal
-						// v_area[1] vertical
+                  // v_area[1] vertical
 						
 assign visible = &v_area;
 
@@ -25,7 +26,7 @@ assign pix = _pix[8:0];
 // don't output LSB
 assign line = _line[9:1];
 
-always @ (posedge clk)
+always @ (negedge clk)
 begin
 	if (~n_reset) begin
 		_pix = 0;
@@ -39,7 +40,7 @@ begin
 
 		case (_pix)
 			8: v_area[0] = 1;		// visible area
-			408: v_area[0] = 0;	// no visible area
+			408: v_area[0] = 0;	    // no visible area
 			428: h_sync = 1; 		// sync pulse
 			492: h_sync = 0; 		// no sync pulse
 			528: begin
@@ -54,7 +55,7 @@ begin
 			601: v_sync = 1;		// sync pulse
 			605: v_sync = 0;		// no sync pulse
 			628: begin
-				_line = 0;		// new frame
+				_line = 0;		    // new frame
 				v_area[1] = 1;		// visible area
 			end
 		endcase

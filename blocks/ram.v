@@ -14,8 +14,8 @@ module RAM (
 	input wire dbg_RW
 );
 
-// select 0x0000 - 0x7FFF
-wire select = ~addr[15];
+// select 0x0000 - 0x3FFF
+wire select = ~addr[15] & ~addr[14];
 
 // output enable -> read(RW=1) and selected
 wire OE = RW & select;
@@ -27,7 +27,7 @@ wire [7:0] q;
 assign data = OE ? q : 8'hZZ;
 
 
-wire dbg_select = ~dbg_addr[15] & dbg_mem_op;
+wire dbg_select = ~dbg_addr[15] & ~dbg_addr[14] & dbg_mem_op;
 wire dbg_OE = dbg_RW & dbg_select;
 wire dbg_WE = ~dbg_RW & dbg_select;
 wire [7:0] dbg_q;

@@ -13,6 +13,7 @@ module ROM (
 	input wire dbg_RW
 );
 
+// select 0x8000 - 0xFFFF
 wire select = addr[15];
 
 wire [7:0] q;
