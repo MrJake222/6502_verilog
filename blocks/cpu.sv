@@ -18,7 +18,8 @@ module CPU (
 	output wire [7:0] dbg_A_val,
 	output wire [7:0] dbg_X_val,
 	output wire [7:0] dbg_Y_val,
-	output wire [7:0] dbg_S_val
+	output wire [7:0] dbg_S_val,
+	output wire [7:0] dbg_P_val
 );
 
 reg [7:0] data_bus_out_buf;
@@ -32,9 +33,6 @@ wire [4:0] cu_adr_mode;
 wire cu_index; // X/Y
 
 // ------------ instruction ------------ //
-wire cu_branch;
-wire cu_flag;
-
 // where to get/latch data 
 wire cu_from_A;
 wire cu_to_A;
@@ -57,9 +55,23 @@ wire cu_alu_and;
 wire cu_alu_eor;
 wire cu_alu_add;
 wire cu_alu_sub;
+wire cu_alu_cmp;
 wire cu_alu_shift_l;
 wire cu_alu_shift_r;
 wire cu_alu_shift_carry_in;
+
+wire cu_update_with_alu;
+wire cu_update_clear_carry;
+wire cu_update_set_carry;
+wire cu_update_clear_int;
+wire cu_update_set_int;
+wire cu_update_clear_ov;
+
+wire cu_branch_value;
+wire cu_branch_neg;
+wire cu_branch_ov;
+wire cu_branch_carry;
+wire cu_branch_zero;
 
 reg [7:0] IR;
 
@@ -67,23 +79,29 @@ CPU_control CU (IR,
 	cu_adr_mode,
 	cu_index,
 	
-	cu_branch,
-	cu_flag,
-	
 	cu_from_A, cu_to_A,
 	cu_from_X, cu_to_X,
 	cu_from_Y, cu_to_Y,
-	cu_from_S, cu_to_S, 
+	cu_from_S, cu_to_S,
 
 	cu_from_mem, cu_to_mem, 
 
 	cu_alu_inc, cu_alu_dec,
 	cu_alu_or, cu_alu_and,
 	cu_alu_eor,
-	cu_alu_add, cu_alu_sub,
+	cu_alu_add, cu_alu_sub, cu_alu_cmp,
 	
 	cu_alu_shift_l, cu_alu_shift_r,
-	cu_alu_shift_carry_in
+	cu_alu_shift_carry_in,
+    
+    cu_update_with_alu,
+    cu_update_clear_carry, cu_update_set_carry,
+    cu_update_clear_int, cu_update_set_int,
+    cu_update_clear_ov,
+    
+    cu_branch_value,
+    cu_branch_neg, cu_branch_ov,
+    cu_branch_carry, cu_branch_zero
 );
 
 
@@ -98,9 +116,24 @@ reg [7:0] X;
 reg [7:0] Y;
 reg [7:0] S;
 
+reg flag_neg;
+reg flag_ov;
+reg flag_zero;
+reg flag_carry;
+wire [7:0] P = {
+	flag_neg,
+	flag_ov,
+	1'b1, 1'b1, 1'b1, 1'b1,
+	flag_zero,
+	flag_carry
+};
 
+// alu carry in
+reg alu_carry_in;
+// alu operations
 reg alu_add;
 reg alu_sub;
+reg alu_cmp;
 reg alu_or;
 reg alu_and;
 reg alu_eor;
@@ -110,16 +143,24 @@ reg alu_shift_l;
 reg alu_shift_r;
 reg alu_shift_carry_in;
 
+reg alu_pass_B;
+
 reg [7:0] alu_A;
 reg [7:0] alu_B;
 wire [7:0] alu_out;
 
-reg alu_pass_B;
+// alu flags out
+wire alu_neg;
+wire alu_ov;
+wire alu_zero;
+wire alu_carry_out;
 
 // ALU
 CPU_ALU ALU (
+   .carry_in(alu_carry_in),
 	    .add(alu_add),
 	    .sub(alu_sub),
+	    .cmp(alu_cmp),
 	 .bit_or(alu_or),
 	.bit_and(alu_and),
 	.bit_eor(alu_eor),
@@ -133,12 +174,19 @@ CPU_ALU ALU (
 	.A(alu_A),
 	.B(alu_B),
 	
-	.out(alu_out)
+	.out(alu_out),
+	
+	.neg(alu_neg),
+	.ov(alu_ov),
+	.zero(alu_zero),
+	.carry_out(alu_carry_out)
 );
 
 task alu_set_cu();
+    alu_carry_in = flag_carry;
 	alu_add = cu_alu_add;
 	alu_sub = cu_alu_sub;
+	alu_cmp = cu_alu_cmp;
 	alu_or  = cu_alu_or;
 	alu_and = cu_alu_and;
 	alu_eor = cu_alu_eor;
@@ -150,8 +198,10 @@ task alu_set_cu();
 endtask
 
 task alu_set_add();
+    alu_carry_in = 0;
 	alu_add = 1;
 	alu_sub = 0;
+	alu_cmp = 0;
 	alu_or  = 0;
 	alu_and = 0;
 	alu_eor = 0;
@@ -163,8 +213,10 @@ task alu_set_add();
 endtask
 
 task alu_set_inc();
+    alu_carry_in = 0;
 	alu_add = 0;
 	alu_sub = 0;
+	alu_cmp = 0;
 	alu_or  = 0;
 	alu_and = 0;
 	alu_eor = 0;
@@ -176,8 +228,10 @@ task alu_set_inc();
 endtask
 
 task alu_set_dec();
+    alu_carry_in = 1;
 	alu_add = 0;
 	alu_sub = 0;
+	alu_cmp = 0;
 	alu_or  = 0;
 	alu_and = 0;
 	alu_eor = 0;
@@ -202,6 +256,25 @@ task alu_writeback();
 	if (cu_to_X) X <= alu_out;
 	if (cu_to_Y) Y <= alu_out;
 	if (cu_to_S) S <= alu_out;
+	
+    if (cu_update_with_alu)
+    begin
+        flag_neg <= alu_neg;
+        flag_ov <= alu_ov;
+        flag_zero <= alu_zero;
+        flag_carry <= alu_carry_out;
+    end
+    
+    if (cu_update_clear_carry)
+        flag_carry <= 0;
+    if (cu_update_set_carry)
+        flag_carry <= 1;
+    if (cu_update_clear_int)
+        ;
+    if (cu_update_set_int)
+        ;
+    if (cu_update_clear_ov)
+        flag_ov <= 0;
 endtask
 
 
@@ -221,13 +294,16 @@ wire [8:0] RAMS = { ~n_reset, cu_adr_mode, state };
 /*
  * state, PC helpers
  */
+
+wire [15:0] PC_next = PC + 16'd1;
+ 
 task set_PC_adr_bus(input [15:0] val);
 	PC <= val;
 	adr_bus <= val;
 endtask
 
 task set_PC_adr_bus_inc();
-	set_PC_adr_bus(PC + 1);
+	set_PC_adr_bus(PC_next);
 endtask
 
 task state_inc();
@@ -253,7 +329,7 @@ endtask
 // useful when consuming operand but not needing next operand
 task next_consume();
 	state_inc();
-	PC <= PC + 1;
+	PC <= PC_next;
 endtask
 
 // ...
@@ -432,6 +508,47 @@ begin
 				alu_latch();
 				next_rst();
 			end
+			
+			
+			/* --------------------- Relative --------------------- */
+			{1'b0, `ADR_REL, 3'd1}:
+			begin
+				alu_A <= PC_next[7:0];
+				alu_B <= data_bus_in;
+				alu_set_add();
+                
+                if ((cu_branch_neg   && cu_branch_value == flag_neg  ) ||
+                    (cu_branch_ov    && cu_branch_value == flag_ov   ) ||
+                    (cu_branch_carry && cu_branch_value == flag_carry) ||
+                    (cu_branch_zero  && cu_branch_value == flag_zero ))
+                    
+                    // take branch
+                    next_consume_put();
+                else
+                
+                    // don't take branch
+                    next_rst_consume();
+			end
+			
+			{1'b0, `ADR_REL, 3'd2}:
+			begin
+                // PC is now +1 (no need to use PC_next)
+                // TODO test page boundary
+                
+				if (alu_B[7] && !alu_carry_out)
+					// subtraction underflow
+                    set_PC_adr_bus({PC[15:8] - 1, alu_out});
+                
+				else if (~alu_B[7] && alu_carry_out)
+					// addition overflow
+                    set_PC_adr_bus({PC[15:8] + 1, alu_out});
+                
+                else
+                    // normal
+                    set_PC_adr_bus({PC[15:8], alu_out});
+				
+				state_reset();
+			end
 		
 		
 			/* --------------------- Stack push --------------------- */
@@ -486,5 +603,6 @@ assign dbg_A_val = A;
 assign dbg_X_val = X;
 assign dbg_Y_val = Y;
 assign dbg_S_val = S;
+assign dbg_P_val = P;
 
 endmodule

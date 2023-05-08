@@ -108,6 +108,13 @@ https://fpgasoftware.intel.com/eula.
 		(text "dbg_S_val[7..0]" (rect 164 155 227 167)(font "Arial" ))
 		(line (pt 248 160)(pt 232 160)(line_width 3))
 	)
+	(port
+		(pt 248 176)
+		(output)
+		(text "dbg_P_val[7..0]" (rect 0 0 63 12)(font "Arial" ))
+		(text "dbg_P_val[7..0]" (rect 164 171 227 183)(font "Arial" ))
+		(line (pt 248 176)(pt 232 176)(line_width 3))
+	)
 	(drawing
 		(rectangle (rect 16 16 232 192)(line_width 1))
 	)

@@ -14,6 +14,7 @@ module dbgu (
     input wire [7:0] val_X,
     input wire [7:0] val_Y,
     input wire [7:0] val_S,
+    input wire [7:0] val_P,
     output reg cpu_clk,
     output reg cpu_n_reset,
 	 
@@ -169,7 +170,7 @@ begin
             8'h12: // get IR
             begin
                 tx_data[0] <= val_IR;
-                // tx_data[1] <= ???;
+                tx_data[1] <= val_P;
                 transmit <= 1;
             end
             

@@ -3,11 +3,8 @@
 module CPU_control (
 	input wire [7:0] IR,			// instruction register
 	
-	output reg [4:0] adr_mode,	// alu_address mode
-	output reg index,			// index register (when indexed mode)
-	
-	output reg branch,			// conditional branch
-	output reg flag,				// flag mangling
+	output reg [4:0] adr_mode,		// alu_address mode
+	output reg index,				// index register (when indexed mode)
 	
 	// These bits represent what should happen during this instruction
 	// (doesn't account when it should execute)
@@ -23,7 +20,8 @@ module CPU_control (
 	output wire from_S,
 	output wire to_S,
 	
-	// memory direction (where applicable, Read-Modify-Write)
+	// during execution, is memory written or not
+	// doesn't take RMW into account
 	output wire from_mem,
 	output wire to_mem,
 	
@@ -35,9 +33,25 @@ module CPU_control (
 	output wire alu_eor,
 	output wire alu_add,
 	output wire alu_sub,
+	output wire alu_cmp,
 	output wire alu_shift_l,
 	output wire alu_shift_r,
-	output wire alu_shift_carry_in
+	output wire alu_shift_carry_in,
+	
+	output wire update_with_alu,
+	output wire update_clear_carry,
+	output wire update_set_carry,
+	output wire update_clear_int,
+	output wire update_set_int,
+	output wire update_clear_ov,
+	
+	// value defines on which value the branch is taken
+	// further wires define which processor status value is tested
+	output wire branch_value,
+	output wire branch_neg,
+	output wire branch_ov,
+	output wire branch_carry,
+	output wire branch_zero
 );
 
 // comb outputs
@@ -82,6 +96,21 @@ reg TSX;
 reg PHA;
 reg PLA;
 
+reg BPL;
+reg BMI;
+reg BVC;
+reg BVS;
+reg BCC;
+reg BCS;
+reg BNE;
+reg BEQ;
+
+reg CLC;
+reg SEC;
+reg CLI;
+reg SEI;
+reg CLV;
+
 
 // output logic
 // register read/write
@@ -105,10 +134,28 @@ assign alu_or  = ORA;
 assign alu_and = AND;
 assign alu_eor = EOR;
 assign alu_add = ADC;
-assign alu_sub = SBC | CMP | CPY | CPX;
+assign alu_sub = SBC;
+assign alu_cmp = CMP | CPY | CPX;
 assign alu_shift_l = ASL_A | ASL_mem | ROL_A | ROL_mem;
 assign alu_shift_r = LSR_A | LSR_mem | ROR_A | ROR_mem;
 assign alu_shift_carry_in = ROL_A | ROL_mem | ROR_A | ROR_mem;
+
+// processor status
+// instructions using ALU, but not providing results in register
+// or flag setting instructions
+assign update_with_alu    = ~(BPL | BMI | BVC | BVS | BCC | BCS | BNE | BEQ | CLC | SEC | CLI | SEI | CLV);
+assign update_clear_carry = CLC;
+assign update_set_carry   = SEC;
+assign update_clear_int   = CLI;
+assign update_set_int     = SEI;
+assign update_clear_ov    = CLV;
+	
+// branching conditions
+assign branch_value = BMI | BVS | BCS | BEQ; // these branch on flag set (1)
+assign branch_neg   = BPL | BMI;
+assign branch_ov    = BVC | BVS;
+assign branch_carry = BCC | BCS;
+assign branch_zero  = BNE | BEQ;
 
 
 // helper wires
@@ -197,44 +244,6 @@ end
 
 // ----------------------------------------------------
 // operations
-
-// branches
-always @*
-begin
-	casex (IR)
-	/*  BPL : 000 100 00
-		BMI : 001 100 00
-		BVC : 010 100 00
-		BVS : 011 100 00
-		BCC : 100 100 00
-		BCS : 101 100 00
-		BNE : 110 100 00
-		BEQ : 111 100 00 */
-			8'bxxx_100_00: branch = 1;
-		
-		default: branch = 0;
-	endcase
-end
-
-// flags
-always @*
-begin
-	casex (IR)
-	/*  CLC : 000 110 00
-		SEC : 001 110 00
-		CLI : 010 110 00
-		SEI : 011 110 00
-		
-		TYA : 100 110 00  <- not this
-			
-		CLV : 101 110 00
-		CLD : 110 110 00
-		SED : 111 110 00 */
-			8'bxxx_110_00: flag = (ira != 3'b100);
-		
-		default: flag = 0;
-	endcase
-end
 
 // alu + accumulator
 always @*
@@ -466,6 +475,91 @@ begin
 	casex (IR)
 		8'h68:   PLA = 1;
 		default: PLA = 0;
+	endcase
+end
+
+// branches
+always @*
+begin
+	casex (IR)
+		8'b00x_100_00: begin
+			BPL = ~IR[5];
+			BMI =  IR[5];
+		end
+		
+		default: begin
+			BPL = 0;
+			BMI = 0;
+		end
+	endcase
+	
+	casex (IR)
+		8'b01x_100_00: begin
+			BVC = ~IR[5];
+			BVS =  IR[5];
+		end
+		
+		default: begin
+			BVC = 0;
+			BVS = 0;
+		end
+	endcase
+	
+	casex (IR)
+		8'b10x_100_00: begin
+			BCC = ~IR[5];
+			BCS =  IR[5];
+		end
+		
+		default: begin
+			BCC = 0;
+			BCS = 0;
+		end
+	endcase
+	
+	casex (IR)
+		8'b11x_100_00: begin
+			BNE = ~IR[5];
+			BEQ =  IR[5];
+		end
+		
+		default: begin
+			BNE = 0;
+			BEQ = 0;
+		end
+	endcase
+end
+
+// flags
+always @*
+begin
+	casex (IR)
+		8'b00x_110_00: begin
+			CLC = ~IR[5];
+			SEC =  IR[5];
+		end
+		
+		default: begin
+			CLC = 0;
+			SEC = 0;
+		end
+	endcase
+	
+	casex (IR)
+		8'b01x_110_00: begin
+			CLI = ~IR[5];
+			SEI =  IR[5];
+		end
+		
+		default: begin
+			CLI = 0;
+			SEI = 0;
+		end
+	endcase
+	
+	casex (IR)
+		8'hB8:   CLV = 1;
+		default: CLV = 0;
 	endcase
 end
 

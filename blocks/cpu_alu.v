@@ -1,8 +1,10 @@
 module CPU_ALU (
 	// input wire clk,	// clock (latching out on negedge)
+	input wire carry_in,
 	
 	input wire add,
 	input wire sub,
+	input wire cmp, // same as sub, but no carry
 	input wire bit_or,
 	input wire bit_and,
 	input wire bit_eor,
@@ -18,48 +20,69 @@ module CPU_ALU (
 	input wire [7:0] A,
 	input wire [7:0] B,
 	
-	output reg [7:0] out
+	output reg [7:0] out,
+	output reg neg,
+	output reg ov,
+	output reg zero,
+	output reg carry_out
 );
 
 // TODO rewrite as multiplexer
 
 reg [7:0] Ai;
+reg [7:0] Aii;
+
 always @*
 begin	
 	if (inc_B | dec_B)
-		Ai = 8'h01;
+		Ai = 1;
 	else
 		Ai = A;
+		
+	if (sub | cmp | dec_B)
+		Aii = ~Ai;
+	else
+		Aii = Ai;
 end
 
 always @*
 begin
-	if (add | inc_B)
-		out = B + Ai;
-		
-	else if (sub | dec_B)
-		out = B - Ai;
+	if (add | sub | cmp | inc_B | dec_B)
+		{carry_out, out} = B + Aii + (carry_in | cmp);
 		
 	else if (bit_or)
-		out = B | Ai;
+		{carry_out, out} = B | Aii;
 		
 	else if (bit_and)
-		out = B & Ai;
+		{carry_out, out} = B & Aii;
 		
 	else if (bit_eor)
-		out = B ^ Ai;
+		{carry_out, out} = B ^ Aii;
 		
 	else if (shift_l)
-		out = B << 1;
+		if (shift_carry_in)
+			{carry_out, out} = (B << 1) | carry_in;
+		else
+			{carry_out, out} = B << 1;
 		
 	else if (shift_r)
-		out = B >> 1;
-		
+		if (shift_carry_in)
+			{carry_out, out} = (carry_in << 7) | (B >> 1);
+		else
+			{carry_out, out} = B >> 1;
+	
 	else if (pass_B)
-		out = B;
+		{carry_out, out} = B;
 		
 	else
-		out = Ai;
+		{carry_out, out} = Aii;
+end
+
+always @*
+begin
+	neg = out[7];
+	ov = (Aii[7] ^ out[7]) & (B[7] ^ out[7]);
+	zero = (out == 0);
 end
 
 endmodule
