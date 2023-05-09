@@ -431,7 +431,7 @@ task addr_zpg_ind_y_step_3();
 endtask
 
 task addr_zpg_ind_y_step_4();
-    adr_bus <= { data_bus_in, adr_low + Y }; // TODO test page boundary
+    adr_bus <= { data_bus_in, adr_low + Y }; // TODO test page boundary, TODO use ALU
     next_state_only();
     
     if (cu_to_mem)
@@ -461,7 +461,24 @@ task exec_rmw_step_3();
 	next_rst();
 endtask
 
-
+// TODO
+// JSR, RTS subroutines
+// BRK
+// interrupts, RTI
+// pull/push processor
+// 
+// JMP 7C indexed indirect
+// JMP 6C indirect
+// 
+// zeropage indexed
+// indexed(X) indirect
+// 
+// 65c02
+// STP, WAI
+// BBR
+// RMB
+// zero page indexed indirect
+// zero page indirect
 
 always @ (negedge clk)
 begin
