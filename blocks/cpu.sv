@@ -363,6 +363,9 @@ task next_state_only();
 endtask
 
 
+// set if page overflow/underflow occurs while branching/indexing
+reg page_boundary;
+
 
 task addr_abs_step_1();
 	adr_low <= data_bus_in;
@@ -392,11 +395,26 @@ task addr_abs_xy_step_1();
 		alu_B <= Y;
 	
 	next_consume_put();
+    page_boundary <= 0;
+endtask
+
+task addr_abs_xy_step_1_5_ov();
+    adr_low <= alu_out;
+    
+    alu_B <= data_bus_in;
+    alu_set_inc();
+    
+    // this intentonally stalls state
+    // page_boundary to force addr_abs_xy_step_2
+    page_boundary <= 1;
 endtask
 
 task addr_abs_xy_step_2();
-	// TODO carry
-	adr_bus <= { data_bus_in, alu_out };
+    if (page_boundary)
+        adr_bus <= { alu_out, adr_low };
+    else
+        adr_bus <= { data_bus_in, alu_out };
+        
 	next_consume();
 	
 	if (cu_to_mem)
@@ -420,18 +438,39 @@ endtask
 
 task addr_zpg_ind_y_step_2();
     adr_bus <= { 8'h00, adr_low };
-    adr_low <= adr_low + 1;
+    
+    alu_B <= adr_low;
+    alu_set_inc();
+    
     next_state_only();
 endtask
 
 task addr_zpg_ind_y_step_3();
-    adr_bus <= { 8'h00, adr_low };
-    adr_low <= data_bus_in;
+    adr_bus <= { 8'h00, alu_out };
+    
+    alu_A <= data_bus_in;
+    alu_B <= Y;
+    alu_set_add();
+    
     next_state_only();
+    page_boundary <= 0;
+endtask
+
+task addr_zpg_ind_y_step_3_5_ov();    
+    adr_low <= alu_out;
+    alu_B <= data_bus_in;
+    alu_set_inc();
+    
+    // stalls state and sets page_boundary to force step 4
+    page_boundary <= 1;
 endtask
 
 task addr_zpg_ind_y_step_4();
-    adr_bus <= { data_bus_in, adr_low + Y }; // TODO test page boundary, TODO use ALU
+    if (page_boundary)
+        adr_bus <= { alu_out, adr_low };
+    else
+        adr_bus <= { data_bus_in, alu_out };
+    
     next_state_only();
     
     if (cu_to_mem)
@@ -462,7 +501,6 @@ task exec_rmw_step_3();
 endtask
 
 // TODO
-// JSR, RTS subroutines
 // BRK
 // interrupts, RTI
 // pull/push processor
@@ -526,7 +564,11 @@ begin
 			
 			/* ---------------------  Absolute indexed --------------------- */
 			{1'b0, `ADR_ABS_X_Y, 3'd1}: addr_abs_xy_step_1();
-			{1'b0, `ADR_ABS_X_Y, 3'd2}: addr_abs_xy_step_2();
+			{1'b0, `ADR_ABS_X_Y, 3'd2}:
+                if (alu_carry_out & ~page_boundary)
+                    addr_abs_xy_step_1_5_ov(); // this stalls state on 2 and sets page_boundary to 1
+                else
+                    addr_abs_xy_step_2();
 			{1'b0, `ADR_ABS_X_Y, 3'd3}: exec_step_3();
 			
 			{1'b0, `ADR_ABS_X_RMW, 3'd1}: addr_abs_xy_step_1();
@@ -550,8 +592,13 @@ begin
 			{1'b0, `ADR_ZPG_IND_Y, 3'd1}: addr_zpg_ind_y_step_1();
 			{1'b0, `ADR_ZPG_IND_Y, 3'd2}: addr_zpg_ind_y_step_2();
 			{1'b0, `ADR_ZPG_IND_Y, 3'd3}: addr_zpg_ind_y_step_3();
-			{1'b0, `ADR_ZPG_IND_Y, 3'd4}: addr_zpg_ind_y_step_4();
+			{1'b0, `ADR_ZPG_IND_Y, 3'd4}: 
+                if (alu_carry_out & ~page_boundary)
+                    addr_zpg_ind_y_step_3_5_ov();
+                else
+                    addr_zpg_ind_y_step_4();
             {1'b0, `ADR_ZPG_IND_Y, 3'd5}: exec_step_3();
+            
             
 			/* --------------------- Accumulator --------------------- */
 			{1'b0, `ADR_ACCUM, 3'd1}:
@@ -607,11 +654,10 @@ begin
 			{1'b0, `ADR_REL, 3'd2}:
 			begin
                 // PC is now +1 (no need to use PC_next)
-                // TODO test page boundary
                 
 				if (alu_B[7] && !alu_carry_out)
 					// subtraction underflow
-                    set_PC_adr_bus({PC[15:8] - 1, alu_out});
+                    set_PC_adr_bus({PC[15:8] - 1, alu_out}); // TODO use alu
                 
 				else if (~alu_B[7] && alu_carry_out)
 					// addition overflow
@@ -625,6 +671,92 @@ begin
 			end
 		
 		
+			/* --------------------- Absolute/Stack JSR --------------------- */
+            {1'b0, `ADR_ABS_JSR, 3'd1}:
+            begin
+                adr_low <= data_bus_in;
+                next_consume();
+                
+                adr_bus <= { 8'h01, S };
+				
+				alu_B <= S;
+				alu_set_dec();
+            end
+            
+            {1'b0, `ADR_ABS_JSR, 3'd2}:
+            begin
+                RW <= `RW_WRITE;
+                data_bus_out_buf <= PC[15:8];
+            
+                next_state_only();
+            end
+            
+            {1'b0, `ADR_ABS_JSR, 3'd3}:
+            begin
+                alu_B <= alu_out;
+                
+                adr_bus <= { 8'h01, alu_out };
+                data_bus_out_buf <= PC[7:0];
+                
+                next_state_only();
+            end
+            
+            {1'b0, `ADR_ABS_JSR, 3'd4}:
+            begin
+                S <= alu_out;
+                
+                adr_bus <= PC;
+                RW <= `RW_READ;
+                
+                next_state_only();
+            end
+            
+            {1'b0, `ADR_ABS_JSR, 3'd5}:
+            begin
+                set_PC_adr_bus({data_bus_in, adr_low});
+                state_reset();
+            end
+            
+            
+            {1'b0, `ADR_STACK_RTS, 3'd1}: 
+            begin
+                alu_B <= S;
+				alu_set_inc();
+				
+				next_state_only();
+            end
+            
+            {1'b0, `ADR_STACK_RTS, 3'd2}: 
+            begin
+                alu_B <= alu_out;
+				adr_bus <= { 8'h01, alu_out };
+                
+                next_state_only();
+            end
+            
+            {1'b0, `ADR_STACK_RTS, 3'd3}: 
+            begin
+                S <= alu_out;
+				adr_bus <= { 8'h01, alu_out };
+                adr_low <= data_bus_in;
+                
+                next_state_only();
+            end
+            
+            {1'b0, `ADR_STACK_RTS, 3'd4}: 
+            begin
+                S <= alu_out;
+                PC <= {data_bus_in, adr_low};
+                
+                next_state_only();
+            end
+            
+            {1'b0, `ADR_STACK_RTS, 3'd5}:
+            begin
+                next_rst_consume();
+            end
+
+            
 			/* --------------------- Stack push --------------------- */
 			{1'b0, `ADR_STACK_PH, 3'd1}:
 			begin

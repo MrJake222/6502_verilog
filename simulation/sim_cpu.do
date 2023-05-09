@@ -50,9 +50,14 @@ add wave -position insertpoint -color "khaki" -label adr_low sim:/main/b2v_CPU0/
 
 
 add wave -position insertpoint -color "firebrick" -label "alu A" sim:/main/b2v_CPU0/ALU/A
+#add wave -position insertpoint -color "firebrick" -label "alu Aii" sim:/main/b2v_CPU0/ALU/Aii
 add wave -position insertpoint -color "firebrick" -label "alu B" sim:/main/b2v_CPU0/ALU/B
-#add wave -position insertpoint -color "firebrick" -label "alu add" sim:/main/b2v_CPU0/ALU/add
-#add wave -position insertpoint -color "firebrick" -label "alu sub" sim:/main/b2v_CPU0/ALU/sub
+#add wave -position insertpoint -color "orange" -label "alu add" sim:/main/b2v_CPU0/ALU/add
+#add wave -position insertpoint -color "orange" -label "alu sub" sim:/main/b2v_CPU0/ALU/sub
+#add wave -position insertpoint -color "orange" -label "alu cmp" sim:/main/b2v_CPU0/ALU/cmp
+#add wave -position insertpoint -color "orange" -label "alu dec_B" sim:/main/b2v_CPU0/ALU/dec_B
+#add wave -position insertpoint -color "orange" -label "alu inc_B" sim:/main/b2v_CPU0/ALU/inc_B
+#add wave -position insertpoint -color "orange" -label "alu carry_in" sim:/main/b2v_CPU0/ALU/carry_in
 
 add wave -position insertpoint -color "firebrick" -label "alu out" sim:/main/b2v_CPU0/ALU/out
 add wave -position insertpoint -color "firebrick" -label "flag neg" sim:/main/b2v_CPU0/flag_neg
@@ -68,4 +73,4 @@ force -freeze sim:/main/cpu_clk 1 {0 ns} , 0 {25 ns} -r {50 ns}
 force -freeze sim:/main/cpu_n_reset 1 {0 ns} , 0 {20 ns} , 1 {30 ns}
 
 run {900 ns}
-run {500 ns}
+#run {500 ns}
