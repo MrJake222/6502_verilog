@@ -48,7 +48,7 @@ end
 always @*
 begin
 	if (add | sub | cmp | inc_B | dec_B)
-		{carry_out, out} = B + Aii + (carry_in | cmp);
+		{carry_out, out} = B + Aii + ((carry_in & ~inc_B) | cmp | dec_B);
 		
 	else if (bit_or)
 		{carry_out, out} = B | Aii;

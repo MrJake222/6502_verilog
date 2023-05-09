@@ -221,7 +221,8 @@ task alu_set_add();
 endtask
 
 task alu_set_inc();
-    alu_carry_in = 0;
+    // carry in not set
+    // inc/dec ignores carry
 	alu_add = 0;
 	alu_sub = 0;
 	alu_cmp = 0;
@@ -236,7 +237,6 @@ task alu_set_inc();
 endtask
 
 task alu_set_dec();
-    alu_carry_in = 1;
 	alu_add = 0;
 	alu_sub = 0;
 	alu_cmp = 0;

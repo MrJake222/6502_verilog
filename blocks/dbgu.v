@@ -70,6 +70,7 @@ reg [7:0] data_bus_out_buf;
 assign data_bus_out = RW ? 8'hZZ : data_bus_out_buf;
 
 reg [7:0] cpu_cycles;    // for how long should cpu run
+reg cpu_free_run;  // cpu running without any cycle limitations
 
 task echo_request ();
 begin
@@ -98,6 +99,7 @@ begin
         
         cpu_clk <= 0;
         cpu_cycles <= 0;
+        cpu_free_run <= 0;
         cpu_n_reset <= 1;
     end
 
@@ -191,6 +193,12 @@ begin
                 cpu_n_reset <= 0;
                 echo_request();
             end
+            
+            8'h22: // Set cpu on free run
+            begin
+                cpu_free_run <= rx_data[1];
+                echo_request();
+            end
         endcase
     end
 
@@ -220,19 +228,22 @@ begin
     end
     
 /* cpu run control */
-    if (cpu_cycles > 0)
+    if (cpu_cycles > 0 | cpu_free_run)
     begin
         cpu_clk <= ~cpu_clk;
         if (cpu_clk)
         begin
             // falling edge
-            
-            if (cpu_cycles == 1)
-                // last edge
-                echo_request();
-            
-            cpu_cycles <= cpu_cycles - 1;
             cpu_n_reset <= 1;
+            
+            if (~cpu_free_run)
+            begin
+                if (cpu_cycles == 1)
+                    // last edge
+                    echo_request();
+                
+                cpu_cycles <= cpu_cycles - 1;
+            end
         end
     end
 
