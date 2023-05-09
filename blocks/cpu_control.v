@@ -38,7 +38,11 @@ module CPU_control (
 	output wire alu_shift_r,
 	output wire alu_shift_carry_in,
 	
-	output wire update_with_alu,
+	output wire update_alu_neg,
+	output wire update_alu_ov,
+	output wire update_alu_zero,
+	output wire update_alu_carry,
+	
 	output wire update_clear_carry,
 	output wire update_set_carry,
 	output wire update_clear_int,
@@ -143,7 +147,13 @@ assign alu_shift_carry_in = ROL_A | ROL_mem | ROR_A | ROR_mem;
 // processor status
 // instructions using ALU, but not providing results in register
 // or flag setting instructions
-assign update_with_alu    = ~(BPL | BMI | BVC | BVS | BCC | BCS | BNE | BEQ | CLC | SEC | CLI | SEI | CLV);
+
+// TODO fix this, not all instructions should update all flags
+assign update_alu_neg   = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | alu_and | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX;
+assign update_alu_ov    = alu_add | alu_sub;
+assign update_alu_zero  = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | alu_and | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX;
+assign update_alu_carry = alu_add | alu_sub | alu_cmp  												   | alu_shift_l | alu_shift_r;
+
 assign update_clear_carry = CLC;
 assign update_set_carry   = SEC;
 assign update_clear_int   = CLI;

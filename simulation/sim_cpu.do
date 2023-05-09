@@ -68,4 +68,4 @@ force -freeze sim:/main/cpu_clk 1 {0 ns} , 0 {25 ns} -r {50 ns}
 force -freeze sim:/main/cpu_n_reset 1 {0 ns} , 0 {20 ns} , 1 {30 ns}
 
 run {900 ns}
-#run {700 ns}
+run {500 ns}

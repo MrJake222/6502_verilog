@@ -54,6 +54,9 @@ vga_char_ram cram (
 wire [7:0] crom_q;
 wire [10:0] crom_addr;
 
+// link between cram and crom (latched)
+reg [7:0] curr_char;
+
 // extract 8 lines from ROM, each 8 bits (pixel values)
 assign crom_addr[2:0] = line[2:0];
 // extract one of 256 characters based on RAM entry
@@ -64,10 +67,6 @@ vga_char_rom crom (
 	.address(crom_addr),
 	.clock(clk_20MHz)
 );
-
-
-// link between cram and crom
-reg [7:0] curr_char;
 
 reg [7:0] pix_data;
 reg [7:0] color;
@@ -132,8 +131,8 @@ wire is_fg = |(pix_data & pixel_index) & (n_blink | blink_clk[3]);
 wire is_bright = bright | is_fg;
 
 // current pixel color
-wire [2:0] pixel_bright_bits = is_bright ? pixel_color : 3'b000;
 wire [2:0] pixel_color = is_fg ? fg : bg;
+wire [2:0] pixel_bright_bits = is_bright ? pixel_color : 3'b000;
 
 wire [3:0] _R = { pixel_bright_bits[2], {3{pixel_color[2]}} };
 wire [3:0] _G = { pixel_bright_bits[1], {3{pixel_color[1]}} };
