@@ -296,9 +296,6 @@ task mem_write();
 endtask
 
 // Logic
-// gluing together reset, address mode and current state
-// RAMS = reset addr mode state (positive logic)
-wire [8:0] RAMS = { ~n_reset, cu_adr_mode, state };
 
 /*
  * state, PC helpers
@@ -531,8 +528,8 @@ begin
 	end else
 	begin
 
-		casex (RAMS)
-			{1'b0, `ADR_DONT_CARE, 3'd0}:
+		casex ({ cu_adr_mode, state })
+			{`ADR_DONT_CARE, 3'd0}:
 			begin
 				IR <= data_bus_in;
 				next_consume_put();
@@ -542,20 +539,20 @@ begin
 			end
 			
 			/* --------------------- Absolute --------------------- */
-			{1'b0, `ADR_ABS, 3'd1}: addr_abs_step_1();
-			{1'b0, `ADR_ABS, 3'd2}: addr_abs_step_2();
-			{1'b0, `ADR_ABS, 3'd3}: exec_step_3();
+			{`ADR_ABS, 3'd1}: addr_abs_step_1();
+			{`ADR_ABS, 3'd2}: addr_abs_step_2();
+			{`ADR_ABS, 3'd3}: exec_step_3();
 			
-			{1'b0, `ADR_ABS_RMW, 3'd1}: addr_abs_step_1();
-			{1'b0, `ADR_ABS_RMW, 3'd2}: addr_abs_step_2();
-			{1'b0, `ADR_ABS_RMW, 3'd3}: exec_rmw_step_1();
-			{1'b0, `ADR_ABS_RMW, 3'd4}: exec_rmw_step_2();
-			{1'b0, `ADR_ABS_RMW, 3'd5}: exec_rmw_step_3();
+			{`ADR_ABS_RMW, 3'd1}: addr_abs_step_1();
+			{`ADR_ABS_RMW, 3'd2}: addr_abs_step_2();
+			{`ADR_ABS_RMW, 3'd3}: exec_rmw_step_1();
+			{`ADR_ABS_RMW, 3'd4}: exec_rmw_step_2();
+			{`ADR_ABS_RMW, 3'd5}: exec_rmw_step_3();
 			
 			
 			/* --------------------- Absolute JMP --------------------- */
-			{1'b0, `ADR_ABS_JMP, 3'd1}: addr_abs_step_1();
-			{1'b0, `ADR_ABS_JMP, 3'd2}:
+			{`ADR_ABS_JMP, 3'd1}: addr_abs_step_1();
+			{`ADR_ABS_JMP, 3'd2}:
 			begin
 				set_PC_adr_bus({data_bus_in, adr_low});
 				state_reset();
@@ -563,45 +560,45 @@ begin
 
 			
 			/* ---------------------  Absolute indexed --------------------- */
-			{1'b0, `ADR_ABS_X_Y, 3'd1}: addr_abs_xy_step_1();
-			{1'b0, `ADR_ABS_X_Y, 3'd2}:
+			{`ADR_ABS_X_Y, 3'd1}: addr_abs_xy_step_1();
+			{`ADR_ABS_X_Y, 3'd2}:
                 if (alu_carry_out & ~page_boundary)
                     addr_abs_xy_step_1_5_ov(); // this stalls state on 2 and sets page_boundary to 1
                 else
                     addr_abs_xy_step_2();
-			{1'b0, `ADR_ABS_X_Y, 3'd3}: exec_step_3();
+			{`ADR_ABS_X_Y, 3'd3}: exec_step_3();
 			
-			{1'b0, `ADR_ABS_X_RMW, 3'd1}: addr_abs_xy_step_1();
-			{1'b0, `ADR_ABS_X_RMW, 3'd2}: addr_abs_xy_step_2();
-			{1'b0, `ADR_ABS_X_RMW, 3'd3}: exec_rmw_step_1();
-			{1'b0, `ADR_ABS_X_RMW, 3'd4}: exec_rmw_step_2();
-			{1'b0, `ADR_ABS_X_RMW, 3'd5}: exec_rmw_step_3();
+			{`ADR_ABS_X_RMW, 3'd1}: addr_abs_xy_step_1();
+			{`ADR_ABS_X_RMW, 3'd2}: addr_abs_xy_step_2();
+			{`ADR_ABS_X_RMW, 3'd3}: exec_rmw_step_1();
+			{`ADR_ABS_X_RMW, 3'd4}: exec_rmw_step_2();
+			{`ADR_ABS_X_RMW, 3'd5}: exec_rmw_step_3();
 			
             
             /* --------------------- Zeropage --------------------- */
-            {1'b0, `ADR_ZPG, 3'd1}: addr_zpg_step_1();
-            {1'b0, `ADR_ZPG, 3'd2}: exec_step_3();
+            {`ADR_ZPG, 3'd1}: addr_zpg_step_1();
+            {`ADR_ZPG, 3'd2}: exec_step_3();
             
-            {1'b0, `ADR_ZPG_RMW, 3'd1}: addr_zpg_step_1();
-            {1'b0, `ADR_ZPG_RMW, 3'd2}: exec_rmw_step_1();
-            {1'b0, `ADR_ZPG_RMW, 3'd3}: exec_rmw_step_2();
-            {1'b0, `ADR_ZPG_RMW, 3'd4}: exec_rmw_step_3();
+            {`ADR_ZPG_RMW, 3'd1}: addr_zpg_step_1();
+            {`ADR_ZPG_RMW, 3'd2}: exec_rmw_step_1();
+            {`ADR_ZPG_RMW, 3'd3}: exec_rmw_step_2();
+            {`ADR_ZPG_RMW, 3'd4}: exec_rmw_step_3();
             
             
             /* --------------------- Zeropage indirect indexed --------------------- */
-			{1'b0, `ADR_ZPG_IND_Y, 3'd1}: addr_zpg_ind_y_step_1();
-			{1'b0, `ADR_ZPG_IND_Y, 3'd2}: addr_zpg_ind_y_step_2();
-			{1'b0, `ADR_ZPG_IND_Y, 3'd3}: addr_zpg_ind_y_step_3();
-			{1'b0, `ADR_ZPG_IND_Y, 3'd4}: 
+			{`ADR_ZPG_IND_Y, 3'd1}: addr_zpg_ind_y_step_1();
+			{`ADR_ZPG_IND_Y, 3'd2}: addr_zpg_ind_y_step_2();
+			{`ADR_ZPG_IND_Y, 3'd3}: addr_zpg_ind_y_step_3();
+			{`ADR_ZPG_IND_Y, 3'd4}: 
                 if (alu_carry_out & ~page_boundary)
                     addr_zpg_ind_y_step_3_5_ov();
                 else
                     addr_zpg_ind_y_step_4();
-            {1'b0, `ADR_ZPG_IND_Y, 3'd5}: exec_step_3();
+            {`ADR_ZPG_IND_Y, 3'd5}: exec_step_3();
             
             
 			/* --------------------- Accumulator --------------------- */
-			{1'b0, `ADR_ACCUM, 3'd1}:
+			{`ADR_ACCUM, 3'd1}:
 			begin
 				alu_latch();
 				next_rst();
@@ -609,7 +606,7 @@ begin
 			
 			
 			/* --------------------- Immediate --------------------- */
-			{1'b0, `ADR_IMM, 3'd1}:
+			{`ADR_IMM, 3'd1}:
 			begin
 				alu_latch();
 				next_rst_consume();
@@ -617,7 +614,7 @@ begin
 			
 			
 			/* --------------------- Implied --------------------- */
-			{1'b0, `ADR_IMPL, 3'd1}:
+			{`ADR_IMPL, 3'd1}:
 			begin
 				// implied mode used only for:
 				// flags, nop, decrements, increments, transfers
@@ -632,7 +629,7 @@ begin
 			
 			
 			/* --------------------- Relative --------------------- */
-			{1'b0, `ADR_REL, 3'd1}:
+			{`ADR_REL, 3'd1}:
 			begin
 				alu_A <= PC_next[7:0];
 				alu_B <= data_bus_in;
@@ -651,7 +648,7 @@ begin
                     next_rst_consume();
 			end
 			
-			{1'b0, `ADR_REL, 3'd2}:
+			{`ADR_REL, 3'd2}:
 			begin
                 // PC is now +1 (no need to use PC_next)
                 
@@ -672,7 +669,7 @@ begin
 		
 		
 			/* --------------------- Absolute/Stack JSR --------------------- */
-            {1'b0, `ADR_ABS_JSR, 3'd1}:
+            {`ADR_ABS_JSR, 3'd1}:
             begin
                 adr_low <= data_bus_in;
                 next_consume();
@@ -683,7 +680,7 @@ begin
 				alu_set_dec();
             end
             
-            {1'b0, `ADR_ABS_JSR, 3'd2}:
+            {`ADR_ABS_JSR, 3'd2}:
             begin
                 RW <= `RW_WRITE;
                 data_bus_out_buf <= PC[15:8];
@@ -691,7 +688,7 @@ begin
                 next_state_only();
             end
             
-            {1'b0, `ADR_ABS_JSR, 3'd3}:
+            {`ADR_ABS_JSR, 3'd3}:
             begin
                 alu_B <= alu_out;
                 
@@ -701,7 +698,7 @@ begin
                 next_state_only();
             end
             
-            {1'b0, `ADR_ABS_JSR, 3'd4}:
+            {`ADR_ABS_JSR, 3'd4}:
             begin
                 S <= alu_out;
                 
@@ -711,14 +708,14 @@ begin
                 next_state_only();
             end
             
-            {1'b0, `ADR_ABS_JSR, 3'd5}:
+            {`ADR_ABS_JSR, 3'd5}:
             begin
                 set_PC_adr_bus({data_bus_in, adr_low});
                 state_reset();
             end
             
             
-            {1'b0, `ADR_STACK_RTS, 3'd1}: 
+            {`ADR_STACK_RTS, 3'd1}: 
             begin
                 alu_B <= S;
 				alu_set_inc();
@@ -726,7 +723,7 @@ begin
 				next_state_only();
             end
             
-            {1'b0, `ADR_STACK_RTS, 3'd2}: 
+            {`ADR_STACK_RTS, 3'd2}: 
             begin
                 alu_B <= alu_out;
 				adr_bus <= { 8'h01, alu_out };
@@ -734,7 +731,7 @@ begin
                 next_state_only();
             end
             
-            {1'b0, `ADR_STACK_RTS, 3'd3}: 
+            {`ADR_STACK_RTS, 3'd3}: 
             begin
                 S <= alu_out;
 				adr_bus <= { 8'h01, alu_out };
@@ -743,7 +740,7 @@ begin
                 next_state_only();
             end
             
-            {1'b0, `ADR_STACK_RTS, 3'd4}: 
+            {`ADR_STACK_RTS, 3'd4}: 
             begin
                 S <= alu_out;
                 PC <= {data_bus_in, adr_low};
@@ -751,14 +748,14 @@ begin
                 next_state_only();
             end
             
-            {1'b0, `ADR_STACK_RTS, 3'd5}:
+            {`ADR_STACK_RTS, 3'd5}:
             begin
                 next_rst_consume();
             end
 
             
 			/* --------------------- Stack push --------------------- */
-			{1'b0, `ADR_STACK_PH, 3'd1}:
+			{`ADR_STACK_PH, 3'd1}:
 			begin
 				adr_bus <= { 8'h01, S };
 				mem_write();
@@ -769,7 +766,7 @@ begin
 				next_state_only();
 			end
 			
-			{1'b0, `ADR_STACK_PH, 3'd2}:
+			{`ADR_STACK_PH, 3'd2}:
 			begin
 				S <= alu_out;
 				next_rst();
@@ -777,7 +774,7 @@ begin
 			
 			
 			/* --------------------- Stack pull --------------------- */
-			{1'b0, `ADR_STACK_PL, 3'd1}:
+			{`ADR_STACK_PL, 3'd1}:
 			begin
 				alu_B <= S;
 				alu_set_inc();
@@ -785,7 +782,7 @@ begin
 				next_state_only();
 			end
 			
-			{1'b0, `ADR_STACK_PL, 3'd2}:
+			{`ADR_STACK_PL, 3'd2}:
 			begin
 				adr_bus <= { 8'h01, alu_out };
 				
@@ -793,7 +790,7 @@ begin
 				next_state_only();
 			end
 			
-			{1'b0, `ADR_STACK_PL, 3'd3}:
+			{`ADR_STACK_PL, 3'd3}:
 			begin
 				alu_latch();
 				next_rst();
