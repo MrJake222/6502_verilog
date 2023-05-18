@@ -11,6 +11,7 @@ module CPU (
 	
 	// control signals
 	output reg RW,
+    input wire IRQB, // interrupt request active low
 	
 	// debug signals
 	output wire [15:0] dbg_PC_val,
@@ -126,15 +127,25 @@ reg [7:0] S;
 
 reg flag_neg;
 reg flag_ov;
+reg flag_int; // 1 = disable
 reg flag_zero;
 reg flag_carry;
 wire [7:0] P = {
 	flag_neg,
 	flag_ov,
-	1'b1, 1'b1, 1'b1, 1'b1,
+	1'b1, 1'b1, 1'b1,
+    flag_int,
 	flag_zero,
 	flag_carry
 };
+
+task set_P(input [7:0] Pn);
+    flag_neg   = Pn[7];
+    flag_ov    = Pn[6];
+    flag_int   = Pn[2];
+    flag_zero  = Pn[1];
+    flag_carry = Pn[0];
+endtask
 
 // alu carry in
 reg alu_carry_in;
@@ -279,9 +290,9 @@ task alu_writeback();
     if (cu_update_set_carry)
         flag_carry <= 1;
     if (cu_update_clear_int)
-        ;
+        flag_int = 0;
     if (cu_update_set_int)
-        ;
+        flag_int = 1;
     if (cu_update_clear_ov)
         flag_ov <= 0;
 endtask
@@ -515,24 +526,45 @@ endtask
 // zero page indexed indirect
 // zero page indirect
 
+// Interrupt handling
+// fake address mode (loaded when interrupt in state 0)
+// if no interrupt then invalid
+reg [4:0] adr_fake;
+wire [4:0] adr_mode = adr_fake == `ADR_INVAL ? cu_adr_mode : adr_fake;
+
+// set to 1 on reset
+// after reset routine ends set to 0
+reg reset_routine;
+
 always @ (negedge clk)
 begin
 	
-	
-	
 	if (~n_reset)
 	begin
-		set_PC_adr_bus(16'h8000);
+		//set_PC_adr_bus(16'h8000);
 		RW <= `RW_READ;
 		state <= 0;
+        reset_routine <= 1;
+        flag_int <= 1; // disabled
 	end else
 	begin
 
-		casex ({ cu_adr_mode, state })
+		casex ({ adr_mode, state })
 			{`ADR_DONT_CARE, 3'd0}:
 			begin
-				IR <= data_bus_in;
-				next_consume_put();
+                if ((~IRQB & ~flag_int) | reset_routine)
+                begin
+                    adr_fake <= `ADR_STACK_INT;
+                    next_state_only();
+                end
+                
+                else
+                begin
+                    // no interrupt
+                    adr_fake <= `ADR_INVAL;
+                    IR <= data_bus_in;
+                    next_consume_put();
+                end
 				
 				alu_writeback();
 				alu_pass_B <= 0;
@@ -668,6 +700,126 @@ begin
 			end
 		
 		
+			/* --------------------- Stack Interrupt --------------------- */
+            // save PCH
+            {`ADR_STACK_INT, 3'd1}:
+            begin
+                adr_bus <= { 8'h01, S };
+                data_bus_out_buf <= PC[15:8];
+                
+                if (!reset_routine)
+                    RW = `RW_WRITE;
+                
+                alu_B <= S;
+                alu_set_dec();
+                
+                next_state_only();
+            end
+            
+            // save PCL
+            {`ADR_STACK_INT, 3'd2}:
+            begin
+                adr_bus <= { 8'h01, alu_out };
+                data_bus_out_buf <= PC[7:0];
+                
+                alu_B <= alu_out;                
+                next_state_only();
+            end
+            
+            // save P
+            {`ADR_STACK_INT, 3'd3}:
+            begin
+                adr_bus <= { 8'h01, alu_out };
+                data_bus_out_buf <= P;
+                
+                flag_int <= 1; // set interrupt disable
+                
+                alu_B <= alu_out;    
+                next_state_only();
+            end
+            
+            // prepare read vector address low
+            {`ADR_STACK_INT, 3'd4}:
+            begin
+                if (reset_routine)
+                    set_PC_adr_bus(16'hFFFC);
+                
+                else if (~IRQB)
+                    set_PC_adr_bus(16'hFFFE);
+                
+                RW = `RW_READ;
+                S <= alu_out;
+                
+                next_state_only();
+            end
+            
+            // read VA low, prepare VA high
+            {`ADR_STACK_INT, 3'd5}:
+            begin
+                adr_low <= data_bus_in;
+                
+                next_consume_put();
+            end
+            
+            // read VA high
+            {`ADR_STACK_INT, 3'd6}:
+            begin
+                set_PC_adr_bus({data_bus_in, adr_low});
+            
+                reset_routine <= 0;
+                state_reset();
+            end
+            
+            
+            /* --------------------- Stack Return from interrupt --------------------- */
+            
+            // prepare stack increment
+            {`ADR_STACK_RTI, 3'd1}:
+            begin
+                alu_B <= S;
+                alu_set_inc();
+                
+                next_state_only();
+            end
+            
+            // prepare read P
+            {`ADR_STACK_RTI, 3'd2}:
+            begin
+                adr_bus <= { 8'h01, alu_out };
+                
+                alu_B <= alu_out;
+                next_state_only();
+            end
+            
+            // read P, prepare next address
+            {`ADR_STACK_RTI, 3'd3}:
+            begin
+                set_P(data_bus_in);
+                adr_bus <= { 8'h01, alu_out };
+                
+                alu_B <= alu_out;
+                next_state_only();
+            end
+            
+            // read PCL
+            {`ADR_STACK_RTI, 3'd4}:
+            begin
+                adr_low <= data_bus_in;
+                adr_bus <= { 8'h01, alu_out };
+                
+                S <= alu_out;
+                next_state_only();
+            end
+            
+            // read PCH
+            {`ADR_STACK_RTI, 3'd5}:
+            begin
+                set_PC_adr_bus({data_bus_in, adr_low});
+                
+                state_reset();
+            end
+            
+            
 			/* --------------------- Absolute/Stack JSR --------------------- */
             {`ADR_ABS_JSR, 3'd1}:
             begin

@@ -2,6 +2,9 @@
 
 // based on 65c02 docs
 
+`define ADR_INVAL		5'd0	  // Invalid address mode
+`define ADR_DONT_CARE	5'bXXXXX  // don't cares (correct width)
+
 `define ADR_ABS			5'd1	// 1a absolute
 `define ADR_ABS_RMW		5'd2	// 1b absolute (RMW)
 `define ADR_ABS_JMP		5'd3	// 1c absolute JUMP
@@ -26,7 +29,7 @@
 `define ADR_REL			5'd14	// 9a relative (branches)
 `define ADR_REL_BIT		5'd15	// 9b relative bit branch (zeropage)		(WDC EXT)
 
-`define ADR_STACK		5'd16	// 10a stack (interrupt)
+`define ADR_STACK_INT	5'd16	// 10a stack (interrupt)
 `define ADR_STACK_BRK	5'd17	// 10b stack (software interrupt)
 `define ADR_STACK_RTI	5'd18	// 10c stack (return from interrupt)
 `define ADR_STACK_RTS	5'd19	// 10d stack (return from subroutine)
@@ -45,10 +48,6 @@
 
 `define ADR_ZPG_IND		5'd28	// 15  zeropage indirect M(op)
 `define ADR_ZPG_IND_Y	5'd29	// 16  zeropage indirect indexed Y M(op)+y
-
-
-`define ADR_INVAL		5'd30	  // Invalid address mode
-`define ADR_DONT_CARE	5'bXXXXX  // don't cares (correct width)
 
 
 `define ADR_INDEX_X	1'd0

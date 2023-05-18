@@ -9,13 +9,17 @@ vsim -t ns -L altera_mf_ver -L lpm_ver work.main -voptargs=+acc
 
 add wave -position insertpoint -color "hot pink" -label clk sim:/main/b2v_CPU0/clk
 add wave -position insertpoint -color "hot pink" -label n_reset sim:/main/b2v_CPU0/n_reset
+add wave -position insertpoint -color "hot pink" -label IRQB sim:/main/b2v_CPU0/IRQB
 
 
 add wave -position insertpoint -color "cyan" -label "PC val" sim:/main/b2v_CPU0/PC
 
 add wave -position insertpoint -color "olive" -label state sim:/main/b2v_CPU0/state
 #add wave -position insertpoint -color "olive" -label RAMS sim:/main/b2v_CPU0/RAMS
-add wave -position insertpoint -color "olive" -radix unsigned -label adr_mode sim:/main/b2v_CPU0/cu_adr_mode
+#add wave -position insertpoint -color "olive" -radix unsigned -label cu_adr_mode sim:/main/b2v_CPU0/cu_adr_mode
+#add wave -position insertpoint -color "olive" -radix unsigned -label adr_fake sim:/main/b2v_CPU0/adr_fake
+add wave -position insertpoint -color "olive" -radix unsigned -label adr_mode sim:/main/b2v_CPU0/adr_mode
+#add wave -position insertpoint -color "olive" -label reset_routine sim:/main/b2v_CPU0/reset_routine
 
 add wave -position insertpoint -color "green yellow" -label adr sim:/main/b2v_CPU0/adr_bus
 add wave -position insertpoint -color "green" -label RW sim:/main/b2v_CPU0/RW
@@ -62,6 +66,7 @@ add wave -position insertpoint -color "firebrick" -label "alu B" sim:/main/b2v_C
 add wave -position insertpoint -color "firebrick" -label "alu out" sim:/main/b2v_CPU0/ALU/out
 add wave -position insertpoint -color "firebrick" -label "flag neg" sim:/main/b2v_CPU0/flag_neg
 add wave -position insertpoint -color "firebrick" -label "flag ov" sim:/main/b2v_CPU0/flag_ov
+add wave -position insertpoint -color "firebrick" -label "flag int" sim:/main/b2v_CPU0/flag_int
 add wave -position insertpoint -color "firebrick" -label "flag zero" sim:/main/b2v_CPU0/flag_zero
 add wave -position insertpoint -color "firebrick" -label "flag carry" sim:/main/b2v_CPU0/flag_carry
 
@@ -72,5 +77,10 @@ force -freeze sim:/main/cpu_clk 1 {0 ns} , 0 {25 ns} -r {50 ns}
 # simple reset
 force -freeze sim:/main/cpu_n_reset 1 {0 ns} , 0 {20 ns} , 1 {30 ns}
 
+# irq
+force -freeze sim:/main/irqb 1 {0 ns} , 0 {840 ns} , 1 {1325 ns}
+
+
 run {900 ns}
-#run {500 ns}
+run {500 ns}
+run {500 ns}

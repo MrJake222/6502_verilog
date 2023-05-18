@@ -13,8 +13,8 @@ module VGA (
 	output wire [3:0] B
 );
 
-// 0x4000 - 0x7FFF
-wire select = ~sys_addr[15] & sys_addr[14];
+// 0x6000 - 0x7FFF
+wire select = ~sys_addr[15] & sys_addr[14] & sys_addr[13];
 
 // Counter logic
 wire [8:0] pix;
