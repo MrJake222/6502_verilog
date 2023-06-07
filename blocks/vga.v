@@ -90,7 +90,8 @@ end
 
 // generate blink clock with 4-bit counter
 // 16 frames = 3.75 Hz
-reg [3:0] blink_clk;
+localparam BLINK_BITS = 6;
+reg [BLINK_BITS-1:0] blink_clk;
 reg blink_inc;
 always @ (negedge clk_20MHz)
 begin
@@ -124,7 +125,7 @@ wire [2:0] bg = color[2:0];
 // pix[2:0] one-hot encoding
 wire [7:0] pixel_index;
 demux_3bit pixel_demuxer (pix[2:0], pixel_index);
-wire is_fg = |(pix_data & pixel_index) & (n_blink | blink_clk[3]);
+wire is_fg = |(pix_data & pixel_index) & (n_blink | blink_clk[BLINK_BITS-1]);
 
 
 // bright pixel is with BRIGHT set or foreground

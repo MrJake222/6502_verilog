@@ -149,9 +149,9 @@ assign alu_shift_carry_in = ROL_A | ROL_mem | ROR_A | ROR_mem;
 // or flag setting instructions
 
 // TODO fix this, not all instructions should update all flags
-assign update_alu_neg   = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | alu_and | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX;
+assign update_alu_neg   = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | alu_and | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX | LDA | LDX | LDY;
 assign update_alu_ov    = alu_add | alu_sub;
-assign update_alu_zero  = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | alu_and | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX;
+assign update_alu_zero  = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | alu_and | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX | LDA | LDX | LDY;
 assign update_alu_carry = alu_add | alu_sub | alu_cmp  												   | alu_shift_l | alu_shift_r;
 
 assign update_clear_carry = CLC;

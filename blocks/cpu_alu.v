@@ -67,9 +67,9 @@ begin
 		
 	else if (shift_r)
 		if (shift_carry_in)
-			{carry_out, out} = (carry_in << 7) | (B >> 1);
+			{out, carry_out} = (carry_in << 8) | B;
 		else
-			{carry_out, out} = B >> 1;
+			{out, carry_out} = B;
 	
 	else if (pass_B)
 		{carry_out, out} = B;

@@ -1102,33 +1102,33 @@ https://fpgasoftware.intel.com/eula.
 (symbol
 	(rect 1192 256 1408 400)
 	(text "PS2" (rect 5 0 25 12)(font "Arial" ))
-	(text "inst3" (rect 8 128 35 140)(font "Arial" ))
+	(text "ps2" (rect 8 128 28 140)(font "Arial" ))
 	(port
 		(pt 0 32)
 		(input)
-		(text "ps2_clk" (rect 0 0 41 12)(font "Arial" ))
-		(text "ps2_clk" (rect 21 27 62 39)(font "Arial" ))
+		(text "ps2_clk__" (rect 0 0 50 12)(font "Arial" ))
+		(text "ps2_clk__" (rect 21 27 71 39)(font "Arial" ))
 		(line (pt 0 32)(pt 16 32))
 	)
 	(port
 		(pt 0 48)
 		(input)
-		(text "ps2_data" (rect 0 0 48 12)(font "Arial" ))
-		(text "ps2_data" (rect 21 43 69 55)(font "Arial" ))
+		(text "ps2_data__" (rect 0 0 59 12)(font "Arial" ))
+		(text "ps2_data__" (rect 21 43 80 55)(font "Arial" ))
 		(line (pt 0 48)(pt 16 48))
 	)
 	(port
 		(pt 0 64)
 		(input)
-		(text "RESB" (rect 0 0 28 12)(font "Arial" ))
-		(text "RESB" (rect 21 59 49 71)(font "Arial" ))
+		(text "clk" (rect 0 0 16 12)(font "Arial" ))
+		(text "clk" (rect 21 59 37 71)(font "Arial" ))
 		(line (pt 0 64)(pt 16 64))
 	)
 	(port
 		(pt 0 80)
 		(input)
-		(text "sys_clk" (rect 0 0 38 12)(font "Arial" ))
-		(text "sys_clk" (rect 21 75 59 87)(font "Arial" ))
+		(text "n_reset" (rect 0 0 40 12)(font "Arial" ))
+		(text "n_reset" (rect 21 75 61 87)(font "Arial" ))
 		(line (pt 0 80)(pt 16 80))
 	)
 	(port
@@ -1852,10 +1852,6 @@ https://fpgasoftware.intel.com/eula.
 	(pt 912 128)
 )
 (connector
-	(pt 888 160)
-	(pt 888 944)
-)
-(connector
 	(pt 888 944)
 	(pt 888 1024)
 )
@@ -1891,39 +1887,6 @@ https://fpgasoftware.intel.com/eula.
 (connector
 	(pt 1160 192)
 	(pt 1160 208)
-)
-(connector
-	(pt 1192 320)
-	(pt 1120 320)
-)
-(connector
-	(pt 1120 320)
-	(pt 1120 560)
-)
-(connector
-	(pt 256 560)
-	(pt 1120 560)
-)
-(connector
-	(pt 1120 560)
-	(pt 1384 560)
-)
-(connector
-	(pt 1192 336)
-	(pt 1136 336)
-)
-(connector
-	(pt 1136 336)
-	(pt 1136 696)
-)
-(connector
-	(text "cpu_clk" (rect 1026 680 1063 692)(font "Intel Clear" ))
-	(pt 432 696)
-	(pt 1136 696)
-)
-(connector
-	(pt 1136 696)
-	(pt 1280 696)
 )
 (connector
 	(pt 1192 352)
@@ -2025,6 +1988,39 @@ https://fpgasoftware.intel.com/eula.
 	(pt 1448 320)
 	(bus)
 )
+(connector
+	(text "cpu_clk" (rect 1026 680 1063 692)(font "Intel Clear" ))
+	(pt 432 696)
+	(pt 1280 696)
+)
+(connector
+	(pt 1128 336)
+	(pt 1192 336)
+)
+(connector
+	(pt 1128 336)
+	(pt 1128 560)
+)
+(connector
+	(pt 256 560)
+	(pt 1128 560)
+)
+(connector
+	(pt 1128 560)
+	(pt 1384 560)
+)
+(connector
+	(pt 888 320)
+	(pt 1192 320)
+)
+(connector
+	(pt 888 160)
+	(pt 888 320)
+)
+(connector
+	(pt 888 320)
+	(pt 888 944)
+)
 (junction (pt 1336 912))
 (junction (pt 1336 720))
 (junction (pt 1368 896))
@@ -2050,11 +2046,11 @@ https://fpgasoftware.intel.com/eula.
 (junction (pt 1296 720))
 (junction (pt 1280 696))
 (junction (pt 256 648))
-(junction (pt 1120 560))
-(junction (pt 1136 696))
 (junction (pt 1152 720))
 (junction (pt 1168 744))
 (junction (pt 1160 680))
+(junction (pt 1128 560))
+(junction (pt 888 320))
 (text "c2 uart - 3.6864MHz" (rect 8 280 128 295)(font "Intel Clear" (font_size 8)))
 (text "c1 cpu - 1MHz" (rect 8 264 92 279)(font "Intel Clear" (font_size 8)))
 (text "c0 vga - 20MHz" (rect 8 248 98 263)(font "Intel Clear" (font_size 8)))
