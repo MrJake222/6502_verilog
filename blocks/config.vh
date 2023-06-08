@@ -10,14 +10,14 @@
 `define ADR_ABS_JMP		5'd3	// 1c absolute JUMP
 `define ADR_ABS_JSR		5'd4	// 1d absolute JUMP to subroutine
 
-`define ADR_ABS_X_IND	5'd5	// 2  absolute indexed X indirect M(op+X)
+`define ADR_ABS_X_IND	5'd5	// 2  absolute indexed X indirect M(op+X) (WDC EXT, JMP only)
 
 `define ADR_ABS_X_Y		5'd6	// 3a absolute indexed X op+X / 4 absolute indexed Y op+Y (see ADR_INDEX_X/Y)
 `define ADR_ABS_X_RMW	5'd7	// 3b absolute indexed X op+X (RMW)
 
 // 4 -> see 3a
 
-`define ADR_ABS_IND		5'd8	// 5 absolute indirect M(op)
+`define ADR_ABS_IND		5'd8	// 5 absolute indirect M(op) (JMP only)
 `define ADR_ACCUM		5'd9	// 6 accumulator
 
 `define ADR_IMM			5'd10	// 7 immediate

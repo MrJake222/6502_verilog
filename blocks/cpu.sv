@@ -43,6 +43,8 @@ wire cu_from_Y;
 wire cu_to_Y;
 wire cu_from_S;
 wire cu_to_S;
+wire cu_from_P;
+wire cu_to_P;
 
 // memory read/write
 wire cu_from_mem;
@@ -88,6 +90,7 @@ CPU_control CU (IR,
 	cu_from_X, cu_to_X,
 	cu_from_Y, cu_to_Y,
 	cu_from_S, cu_to_S,
+	cu_from_P, cu_to_P,
 
 	cu_from_mem, cu_to_mem, 
 
@@ -268,6 +271,7 @@ task alu_latch();
 	if (cu_from_X) alu_B <= X;
 	if (cu_from_Y) alu_B <= Y;
 	if (cu_from_S) alu_B <= S;
+	if (cu_from_P) alu_B <= P;
 endtask
 
 task alu_writeback();
@@ -275,6 +279,7 @@ task alu_writeback();
 	if (cu_to_X) X <= alu_out;
 	if (cu_to_Y) Y <= alu_out;
 	if (cu_to_S) S <= alu_out;
+	if (cu_to_P) set_P(alu_out);
 	
     if (cu_update_alu_neg)
         flag_neg <= alu_neg;
@@ -304,6 +309,7 @@ task mem_write();
 	if (cu_from_X) data_bus_out_buf <= X;
 	if (cu_from_Y) data_bus_out_buf <= Y;
 	if (cu_from_S) data_bus_out_buf <= S;
+	if (cu_from_P) data_bus_out_buf <= P;
 endtask
 
 // Logic
@@ -430,9 +436,77 @@ task addr_abs_xy_step_2();
 endtask
 
 
+task addr_abs_ind_step_1();
+	set_PC_adr_bus({data_bus_in, adr_low});
+	next_state_only();
+endtask
+
+task addr_abs_ind_step_2();
+	adr_low <= data_bus_in;
+	next_consume_put();
+endtask
+
+task addr_abs_ind_step_3();
+	set_PC_adr_bus({data_bus_in, adr_low});
+	state_reset();
+endtask
+
+
 task addr_zpg_step_1();
     adr_bus <= { 8'h00, data_bus_in };
     next_consume();
+	
+	if (cu_to_mem)
+		mem_write();
+endtask
+
+
+task addr_zpg_x_ind_step_1();
+	alu_set_add();
+	alu_A <= data_bus_in;
+	alu_B <= X;
+
+	next_consume();
+endtask
+
+task addr_zpg_x_ind_step_2();
+	adr_bus <= { 8'h00, alu_out };
+	
+	alu_B <= alu_out;
+	alu_set_inc();
+	
+	next_state_only();
+endtask
+
+task addr_zpg_x_ind_step_3();
+	adr_low <= data_bus_in;
+	adr_bus <= { 8'h00, alu_out };
+	next_state_only();
+endtask
+
+task addr_zpg_x_ind_step_4();
+	adr_bus <= { data_bus_in, adr_low };
+	next_state_only();
+	
+	if (cu_to_mem)
+		mem_write();
+endtask
+
+
+task addr_zpg_xy_step_1();
+	alu_set_add();
+	alu_A <= data_bus_in;
+	if (cu_index == `ADR_INDEX_X)
+		alu_B <= X;
+	else
+		alu_B <= Y;
+	
+	next_consume();
+endtask
+
+task addr_zpg_xy_step_2();
+	adr_bus <= { 8'h00, alu_out };
+	next_state_only();
 	
 	if (cu_to_mem)
 		mem_write();
@@ -606,6 +680,13 @@ begin
 			{`ADR_ABS_X_RMW, 3'd4}: exec_rmw_step_2();
 			{`ADR_ABS_X_RMW, 3'd5}: exec_rmw_step_3();
 			
+			
+			/* ---------------------  Absolute indirect --------------------- */
+			{`ADR_ABS_IND, 3'd1}: addr_abs_step_1();
+			{`ADR_ABS_IND, 3'd2}: addr_abs_ind_step_1();
+			{`ADR_ABS_IND, 3'd3}: addr_abs_ind_step_2();
+			{`ADR_ABS_IND, 3'd4}: addr_abs_ind_step_3();
+			
             
             /* --------------------- Zeropage --------------------- */
             {`ADR_ZPG, 3'd1}: addr_zpg_step_1();
@@ -616,6 +697,25 @@ begin
             {`ADR_ZPG_RMW, 3'd3}: exec_rmw_step_2();
             {`ADR_ZPG_RMW, 3'd4}: exec_rmw_step_3();
             
+            
+            /* --------------------- Zeropage indexed indirect --------------------- */
+            {`ADR_ZPG_X_IND, 3'd1}: addr_zpg_x_ind_step_1();
+            {`ADR_ZPG_X_IND, 3'd2}: addr_zpg_x_ind_step_2();
+            {`ADR_ZPG_X_IND, 3'd3}: addr_zpg_x_ind_step_3();
+            {`ADR_ZPG_X_IND, 3'd4}: addr_zpg_x_ind_step_4();
+            {`ADR_ZPG_X_IND, 3'd5}: exec_step_3();
+            
+            
+            /* --------------------- Zeropage indexed --------------------- */
+            {`ADR_ZPG_X_Y, 3'd1}: addr_zpg_xy_step_1();
+            {`ADR_ZPG_X_Y, 3'd2}: addr_zpg_xy_step_2();
+            {`ADR_ZPG_X_Y, 3'd3}: exec_step_3();
+            
+            {`ADR_ZPG_X_RMW, 3'd1}: addr_zpg_xy_step_1();
+            {`ADR_ZPG_X_RMW, 3'd2}: addr_zpg_xy_step_2();
+            {`ADR_ZPG_X_RMW, 3'd3}: exec_rmw_step_1();
+            {`ADR_ZPG_X_RMW, 3'd4}: exec_rmw_step_2();
+            {`ADR_ZPG_X_RMW, 3'd5}: exec_rmw_step_3();
             
             /* --------------------- Zeropage indirect indexed --------------------- */
 			{`ADR_ZPG_IND_Y, 3'd1}: addr_zpg_ind_y_step_1();

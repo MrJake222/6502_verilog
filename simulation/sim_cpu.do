@@ -78,5 +78,5 @@ force -freeze sim:/main/cpu_irqb 1 {0 ns} , 0 {840 ns} , 1 {1325 ns}
 
 
 run {900 ns}
-#run {500 ns}
+run {500 ns}
 #run {500 ns}

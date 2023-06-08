@@ -19,6 +19,8 @@ module CPU_control (
 	output wire to_Y,
 	output wire from_S,
 	output wire to_S,
+	output wire from_P,
+	output wire to_P,
 	
 	// during execution, is memory written or not
 	// doesn't take RMW into account
@@ -99,6 +101,8 @@ reg TSX;
 
 reg PHA;
 reg PLA;
+reg PHP;
+reg PLP;
 
 reg BPL;
 reg BMI;
@@ -126,6 +130,8 @@ assign from_Y = STY | CPY | INY | DEY | TYA;
 assign to_Y   = LDY       | INY | DEY | TAY;
 assign from_S = TSX;
 assign to_S   = TXS;
+assign from_P = PHP;
+assign to_P   = PLP;
 
 // memory read/write
 assign from_mem = LDA | LDX | LDY | CMP | CPX | CPY | ORA | AND | EOR | ADC | SBC;
@@ -212,7 +218,7 @@ begin
 		
 	
 	// center (arithmetic instructions)
-		8'bxxx_000_x1: adr_mode = `ADR_ABS_X_IND;
+		8'bxxx_000_x1: adr_mode = `ADR_ZPG_X_IND;
 		8'bxxx_010_x1: adr_mode = `ADR_IMM;
 		8'bxxx_100_x1: adr_mode = `ADR_ZPG_IND_Y;
 		8'bxxx_110_x1: adr_mode = `ADR_ABS_X_Y;
@@ -474,17 +480,30 @@ begin
 end
 
 // stack
-// register transfers
 always @*
 begin
 	casex (IR)
-		8'h48:   PHA = 1;
-		default: PHA = 0;
+		8'b01x_010_00: begin
+			PLA =  IR[5];
+			PHA = ~IR[5];
+		end
+		
+		default: begin
+			PLA = 0;
+			PHA = 0;
+		end
 	endcase
-
+	
 	casex (IR)
-		8'h68:   PLA = 1;
-		default: PLA = 0;
+		8'b00x_010_00: begin
+			PLP =  IR[5];
+			PHP = ~IR[5];
+		end
+		
+		default: begin
+			PLP = 0;
+			PHP = 0;
+		end
 	endcase
 end
 
