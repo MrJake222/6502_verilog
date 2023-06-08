@@ -1100,7 +1100,7 @@ https://fpgasoftware.intel.com/eula.
 	(rotate270)
 )
 (symbol
-	(rect 1192 256 1408 400)
+	(rect 1192 256 1424 400)
 	(text "PS2" (rect 5 0 25 12)(font "Arial" ))
 	(text "ps2" (rect 8 128 28 140)(font "Arial" ))
 	(port
@@ -1139,28 +1139,28 @@ https://fpgasoftware.intel.com/eula.
 		(line (pt 0 96)(pt 16 96)(line_width 3))
 	)
 	(port
-		(pt 216 32)
+		(pt 232 32)
 		(output)
-		(text "sys_data[7..0]" (rect 0 0 75 12)(font "Arial" ))
-		(text "sys_data[7..0]" (rect 132 27 195 39)(font "Arial" ))
-		(line (pt 216 32)(pt 200 32)(line_width 3))
+		(text "sys_data_out[7..0]" (rect 0 0 97 12)(font "Arial" ))
+		(text "sys_data_out[7..0]" (rect 129 27 211 39)(font "Arial" ))
+		(line (pt 232 32)(pt 216 32)(line_width 3))
 	)
 	(port
-		(pt 216 48)
+		(pt 232 48)
 		(output)
 		(text "sys_irq" (rect 0 0 37 12)(font "Arial" ))
-		(text "sys_irq" (rect 164 43 195 55)(font "Arial" ))
-		(line (pt 216 48)(pt 200 48))
+		(text "sys_irq" (rect 180 43 211 55)(font "Arial" ))
+		(line (pt 232 48)(pt 216 48))
 	)
 	(port
-		(pt 216 64)
+		(pt 232 64)
 		(output)
 		(text "dbg[9..0]" (rect 0 0 49 12)(font "Arial" ))
-		(text "dbg[9..0]" (rect 154 59 195 71)(font "Arial" ))
-		(line (pt 216 64)(pt 200 64)(line_width 3))
+		(text "dbg[9..0]" (rect 170 59 211 71)(font "Arial" ))
+		(line (pt 232 64)(pt 216 64)(line_width 3))
 	)
 	(drawing
-		(rectangle (rect 16 16 200 128))
+		(rectangle (rect 16 16 216 128))
 	)
 )
 (connector
@@ -1910,21 +1910,6 @@ https://fpgasoftware.intel.com/eula.
 	(bus)
 )
 (connector
-	(pt 1408 288)
-	(pt 1424 288)
-	(bus)
-)
-(connector
-	(pt 1424 416)
-	(pt 1424 288)
-	(bus)
-)
-(connector
-	(pt 1168 416)
-	(pt 1424 416)
-	(bus)
-)
-(connector
 	(pt 1168 416)
 	(pt 1168 744)
 	(bus)
@@ -1939,18 +1924,6 @@ https://fpgasoftware.intel.com/eula.
 	(pt 1168 744)
 	(pt 1312 744)
 	(bus)
-)
-(connector
-	(pt 1408 304)
-	(pt 1416 304)
-)
-(connector
-	(pt 1416 304)
-	(pt 1416 408)
-)
-(connector
-	(pt 1416 408)
-	(pt 1160 408)
 )
 (connector
 	(pt 448 816)
@@ -1972,11 +1945,6 @@ https://fpgasoftware.intel.com/eula.
 (connector
 	(pt 1160 680)
 	(pt 424 680)
-)
-(connector
-	(pt 1408 320)
-	(pt 1448 320)
-	(bus)
 )
 (connector
 	(pt 1472 184)
@@ -2020,6 +1988,38 @@ https://fpgasoftware.intel.com/eula.
 (connector
 	(pt 888 320)
 	(pt 888 944)
+)
+(connector
+	(pt 1440 416)
+	(pt 1440 288)
+	(bus)
+)
+(connector
+	(pt 1168 416)
+	(pt 1440 416)
+	(bus)
+)
+(connector
+	(pt 1432 304)
+	(pt 1432 408)
+)
+(connector
+	(pt 1160 408)
+	(pt 1432 408)
+)
+(connector
+	(pt 1424 320)
+	(pt 1448 320)
+	(bus)
+)
+(connector
+	(pt 1424 288)
+	(pt 1440 288)
+	(bus)
+)
+(connector
+	(pt 1424 304)
+	(pt 1432 304)
 )
 (junction (pt 1336 912))
 (junction (pt 1336 720))

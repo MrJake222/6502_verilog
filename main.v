@@ -14,8 +14,8 @@
 // https://fpgasoftware.intel.com/eula.
 
 // PROGRAM		"Quartus Prime"
-// VERSION		"Version 22.1std.0 Build 915 10/25/2022 SC Lite Edition"
-// CREATED		"Mon May 22 14:41:21 2023"
+// VERSION		"Version 21.1.1 Build 850 06/23/2022 SJ Lite Edition"
+// CREATED		"Wed Jun  7 12:59:04 2023"
 
 module main(
 	MAX10_CLK1_50,
@@ -147,14 +147,14 @@ assign	SYNTHESIZED_WIRE_10 =  ~GPIO[3];
 
 
 PS2	b2v_ps2(
-	.ps2_clk(SYNTHESIZED_WIRE_9),
-	.ps2_data(SYNTHESIZED_WIRE_10),
+	.ps2_clk__(SYNTHESIZED_WIRE_9),
+	.ps2_data__(SYNTHESIZED_WIRE_10),
 	.clk(clk_uart),
 	.n_reset(master_n_reset),
 	.sys_adr(addr_bus),
 	.sys_irq(cpu_irqb),
 	.dbg(LEDR),
-	.sys_data(data));
+	.sys_data_out(data));
 
 
 RAM	b2v_ram0(

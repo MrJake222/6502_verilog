@@ -8,8 +8,8 @@ vsim -t ns -L altera_mf_ver -L lpm_ver work.main -voptargs=+acc
 
 
 add wave -position insertpoint -color "hot pink" -label clk sim:/main/b2v_CPU0/clk
-add wave -position insertpoint -color "hot pink" -label n_reset sim:/main/b2v_CPU0/n_reset
-add wave -position insertpoint -color "hot pink" -label IRQB sim:/main/b2v_CPU0/IRQB
+#add wave -position insertpoint -color "hot pink" -label n_reset sim:/main/b2v_CPU0/n_reset
+#add wave -position insertpoint -color "hot pink" -label IRQB sim:/main/b2v_CPU0/IRQB
 
 
 add wave -position insertpoint -color "cyan" -label "PC val" sim:/main/b2v_CPU0/PC
@@ -21,15 +21,11 @@ add wave -position insertpoint -color "olive" -label state sim:/main/b2v_CPU0/st
 add wave -position insertpoint -color "olive" -radix unsigned -label adr_mode sim:/main/b2v_CPU0/adr_mode
 #add wave -position insertpoint -color "olive" -label reset_routine sim:/main/b2v_CPU0/reset_routine
 
-add wave -position insertpoint -color "green yellow" -label adr sim:/main/b2v_CPU0/adr_bus
-add wave -position insertpoint -color "green" -label RW sim:/main/b2v_CPU0/RW
-add wave -position insertpoint -color "green yellow" -label data sim:/main/b2v_CPU0/data_bus_in
-add wave -position insertpoint -color "green yellow" -label data sim:/main/b2v_CPU0/data_bus_out
+add wave -position insertpoint -color "green yellow" -label adr sim:/main/addr_bus
+add wave -position insertpoint -color "green" -label RW sim:/main/RW
+add wave -position insertpoint -color "green yellow" -label data sim:/main/data
 
 add wave -position insertpoint -color "red" -label "IR val" sim:/main/b2v_CPU0/IR
-
-
-
 
 
 #add wave -position insertpoint -color "violet" -label "cu_from_A" sim:/main/b2v_CPU0/cu_from_A
@@ -78,9 +74,9 @@ force -freeze sim:/main/cpu_clk 1 {0 ns} , 0 {25 ns} -r {50 ns}
 force -freeze sim:/main/cpu_n_reset 1 {0 ns} , 0 {20 ns} , 1 {30 ns}
 
 # irq
-force -freeze sim:/main/irqb 1 {0 ns} , 0 {840 ns} , 1 {1325 ns}
+force -freeze sim:/main/cpu_irqb 1 {0 ns} , 0 {840 ns} , 1 {1325 ns}
 
 
 run {900 ns}
-run {500 ns}
-run {500 ns}
+#run {500 ns}
+#run {500 ns}

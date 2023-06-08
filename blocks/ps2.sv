@@ -6,7 +6,7 @@ module PS2 (
     input wire n_reset,
     
     input wire [15:0] sys_adr,
-    output reg [7:0] sys_data,
+    output wire [7:0] sys_data_out,
     output wire sys_irq,
     
     output wire [9:0] dbg
@@ -26,6 +26,9 @@ end
 // 0x4000 - 0x5FFF
 wire sys_select = ~sys_adr[15] & sys_adr[14] & ~sys_adr[13];
 wire sys_rs = sys_adr[0];
+
+reg [7:0] sys_data;
+assign sys_data_out = sys_select ? sys_data : 8'hZZ;
 
 `define R_STATUS 0
 `define R_DATA   1
