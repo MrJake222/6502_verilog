@@ -50,6 +50,8 @@ module CPU_control (
 	output wire update_clear_int,
 	output wire update_set_int,
 	output wire update_clear_ov,
+	output wire update_neg_m7,
+	output wire update_ov_m6,
 	
 	// value defines on which value the branch is taken
 	// further wires define which processor status value is tested
@@ -119,10 +121,11 @@ reg CLI;
 reg SEI;
 reg CLV;
 
+reg BIT;
 
 // output logic
 // register read/write
-assign from_A = STA | CMP             | TAY | TAX | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A | PHA;
+assign from_A = STA | CMP             | TAY | TAX | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A | PHA | BIT;
 assign to_A   = LDA                   | TYA | TXA | ORA | AND | EOR | ADC | SBC | ASL_A | ROL_A | LSR_A | ROR_A | PLA;
 assign from_X = STX | CPX | INX | DEX | TXA | TXS;
 assign to_X   = LDX       | INX | DEX | TAX | TSX;
@@ -141,7 +144,7 @@ assign to_mem   = STA | STX | STY;
 assign alu_inc = INX | INY | INC;
 assign alu_dec = DEX | DEY | DEC;
 assign alu_or  = ORA;
-assign alu_and = AND;
+assign alu_and = AND | BIT;
 assign alu_eor = EOR;
 assign alu_add = ADC;
 assign alu_sub = SBC;
@@ -155,16 +158,18 @@ assign alu_shift_carry_in = ROL_A | ROL_mem | ROR_A | ROR_mem;
 // or flag setting instructions
 
 // TODO fix this, not all instructions should update all flags
-assign update_alu_neg   = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | alu_and | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX | LDA | LDX | LDY;
+assign update_alu_neg   = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | AND | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX | LDA | LDX | LDY;
 assign update_alu_ov    = alu_add | alu_sub;
-assign update_alu_zero  = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | alu_and | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX | LDA | LDX | LDY;
-assign update_alu_carry = alu_add | alu_sub | alu_cmp  												   | alu_shift_l | alu_shift_r;
+assign update_alu_zero  = alu_add | alu_sub | alu_cmp | alu_inc | alu_dec | alu_or | AND | alu_eor | alu_shift_l | alu_shift_r | PLA | TAY | TYA | TXA | TAX | TSX | LDA | LDX | LDY | BIT;
+assign update_alu_carry = alu_add | alu_sub | alu_cmp											   | alu_shift_l | alu_shift_r;
 
 assign update_clear_carry = CLC;
 assign update_set_carry   = SEC;
 assign update_clear_int   = CLI;
 assign update_set_int     = SEI;
 assign update_clear_ov    = CLV;
+assign update_neg_m7      = BIT;
+assign update_ov_m6       = BIT;
 	
 // branching conditions
 assign branch_value = BMI | BVS | BCS | BEQ; // these branch on flag set (1)
@@ -589,6 +594,14 @@ begin
 	casex (IR)
 		8'hB8:   CLV = 1;
 		default: CLV = 0;
+	endcase
+	
+	casex (IR)
+		8'b001_0x1_00:
+			BIT = 1;
+		
+		default:
+			BIT = 0;
 	endcase
 end
 

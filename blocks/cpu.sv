@@ -73,6 +73,8 @@ wire cu_update_set_carry;
 wire cu_update_clear_int;
 wire cu_update_set_int;
 wire cu_update_clear_ov;
+wire cu_update_neg_m7;
+wire cu_update_ov_m6;
 
 wire cu_branch_value;
 wire cu_branch_neg;
@@ -110,6 +112,7 @@ CPU_control CU (IR,
     cu_update_clear_carry, cu_update_set_carry,
     cu_update_clear_int, cu_update_set_int,
     cu_update_clear_ov,
+    cu_update_neg_m7, cu_update_ov_m6,
     
     cu_branch_value,
     cu_branch_neg, cu_branch_ov,
@@ -560,7 +563,12 @@ task addr_zpg_ind_y_step_4();
 endtask
 
 
-task exec_step_3();
+task exec_step_1();
+    if (cu_update_neg_m7)
+		flag_neg <= data_bus_in[7];
+    if (cu_update_ov_m6)
+		flag_ov <= data_bus_in[6];
+
 	alu_latch();
 	next_rst();
 endtask
@@ -647,7 +655,7 @@ begin
 			/* --------------------- Absolute --------------------- */
 			{`ADR_ABS, 3'd1}: addr_abs_step_1();
 			{`ADR_ABS, 3'd2}: addr_abs_step_2();
-			{`ADR_ABS, 3'd3}: exec_step_3();
+			{`ADR_ABS, 3'd3}: exec_step_1();
 			
 			{`ADR_ABS_RMW, 3'd1}: addr_abs_step_1();
 			{`ADR_ABS_RMW, 3'd2}: addr_abs_step_2();
@@ -672,7 +680,7 @@ begin
                     addr_abs_xy_step_1_5_ov(); // this stalls state on 2 and sets page_boundary to 1
                 else
                     addr_abs_xy_step_2();
-			{`ADR_ABS_X_Y, 3'd3}: exec_step_3();
+			{`ADR_ABS_X_Y, 3'd3}: exec_step_1();
 			
 			{`ADR_ABS_X_RMW, 3'd1}: addr_abs_xy_step_1();
 			{`ADR_ABS_X_RMW, 3'd2}: addr_abs_xy_step_2();
@@ -690,7 +698,7 @@ begin
             
             /* --------------------- Zeropage --------------------- */
             {`ADR_ZPG, 3'd1}: addr_zpg_step_1();
-            {`ADR_ZPG, 3'd2}: exec_step_3();
+            {`ADR_ZPG, 3'd2}: exec_step_1();
             
             {`ADR_ZPG_RMW, 3'd1}: addr_zpg_step_1();
             {`ADR_ZPG_RMW, 3'd2}: exec_rmw_step_1();
@@ -703,13 +711,13 @@ begin
             {`ADR_ZPG_X_IND, 3'd2}: addr_zpg_x_ind_step_2();
             {`ADR_ZPG_X_IND, 3'd3}: addr_zpg_x_ind_step_3();
             {`ADR_ZPG_X_IND, 3'd4}: addr_zpg_x_ind_step_4();
-            {`ADR_ZPG_X_IND, 3'd5}: exec_step_3();
+            {`ADR_ZPG_X_IND, 3'd5}: exec_step_1();
             
             
             /* --------------------- Zeropage indexed --------------------- */
             {`ADR_ZPG_X_Y, 3'd1}: addr_zpg_xy_step_1();
             {`ADR_ZPG_X_Y, 3'd2}: addr_zpg_xy_step_2();
-            {`ADR_ZPG_X_Y, 3'd3}: exec_step_3();
+            {`ADR_ZPG_X_Y, 3'd3}: exec_step_1();
             
             {`ADR_ZPG_X_RMW, 3'd1}: addr_zpg_xy_step_1();
             {`ADR_ZPG_X_RMW, 3'd2}: addr_zpg_xy_step_2();
@@ -726,7 +734,7 @@ begin
                     addr_zpg_ind_y_step_3_5_ov();
                 else
                     addr_zpg_ind_y_step_4();
-            {`ADR_ZPG_IND_Y, 3'd5}: exec_step_3();
+            {`ADR_ZPG_IND_Y, 3'd5}: exec_step_1();
             
             
 			/* --------------------- Accumulator --------------------- */
