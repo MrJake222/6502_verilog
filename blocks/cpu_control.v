@@ -24,7 +24,6 @@ module CPU_control (
 	
 	// during execution, is memory written or not
 	// doesn't take RMW into account
-	output wire from_mem,
 	output wire to_mem,
 	
 	// alu control
@@ -136,8 +135,7 @@ assign to_S   = TXS;
 assign from_P = PHP;
 assign to_P   = PLP;
 
-// memory read/write
-assign from_mem = LDA | LDX | LDY | CMP | CPX | CPY | ORA | AND | EOR | ADC | SBC;
+// memory write
 assign to_mem   = STA | STX | STY;
 
 // alu control

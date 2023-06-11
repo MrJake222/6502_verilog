@@ -94,7 +94,7 @@ CPU_control CU (IR,
 	cu_from_S, cu_to_S,
 	cu_from_P, cu_to_P,
 
-	cu_from_mem, cu_to_mem, 
+	cu_to_mem, 
 
 	cu_alu_inc, cu_alu_dec,
 	cu_alu_or, cu_alu_and,
