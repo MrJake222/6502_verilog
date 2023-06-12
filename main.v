@@ -15,7 +15,7 @@
 
 // PROGRAM		"Quartus Prime"
 // VERSION		"Version 21.1.1 Build 850 06/23/2022 SJ Lite Edition"
-// CREATED		"Wed Jun  7 12:59:04 2023"
+// CREATED		"Sun Jun 11 22:54:04 2023"
 
 module main(
 	MAX10_CLK1_50,
@@ -187,13 +187,15 @@ VGA	b2v_VGA0(
 	.clk_20MHz(SYNTHESIZED_WIRE_15),
 	.n_reset(master_n_reset),
 	.sys_clk(cpu_clk),
+	.RW(RW),
 	.sys_addr(addr_bus),
-	.sys_data(data),
+	.sys_data_in(data),
 	.h_sync(VGA_HS),
 	.v_sync(VGA_VS),
 	.B(VGA_B),
 	.G(VGA_G),
-	.R(VGA_R));
+	.R(VGA_R),
+	.sys_data_out_(data));
 
 
 pll	b2v_vga_pll(

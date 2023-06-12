@@ -66,6 +66,13 @@ add wave -position insertpoint -color "firebrick" -label "flag int" sim:/main/b2
 add wave -position insertpoint -color "firebrick" -label "flag zero" sim:/main/b2v_CPU0/flag_zero
 add wave -position insertpoint -color "firebrick" -label "flag carry" sim:/main/b2v_CPU0/flag_carry
 
+add wave -position insertpoint -color "olive" -label "VGA select" sim:/main/b2v_VGA0/sys_select
+add wave -position insertpoint -color "olive" -label "VGA write" sim:/main/b2v_VGA0/sys_write
+add wave -position insertpoint -color "olive" -label "VGA addr" sim:/main/b2v_VGA0/sys_addr
+add wave -position insertpoint -color "olive" -label "VGA din" sim:/main/b2v_VGA0/sys_data_in
+add wave -position insertpoint -color "olive" -label "VGA dout int" sim:/main/b2v_VGA0/sys_data_out
+add wave -position insertpoint -color "olive" -label "VGA dout ext" sim:/main/b2v_VGA0/sys_data_out_
+
 
 
 force -freeze sim:/main/cpu_clk 1 {0 ns} , 0 {25 ns} -r {50 ns}

@@ -4,7 +4,9 @@ module VGA (
 	
     input wire sys_clk,				// write clock
 	input wire [15:0] sys_addr,	    // address bus
-	input wire [7:0] sys_data,		// data bus
+	input wire [7:0] sys_data_in,		// data bus
+	output wire [7:0] sys_data_out_,		// data bus
+	input wire RW,							// read / write signal
 	
 	output wire h_sync,
 	output wire v_sync,
@@ -14,7 +16,11 @@ module VGA (
 );
 
 // 0x6000 - 0x7FFF
-wire select = ~sys_addr[15] & sys_addr[14] & sys_addr[13];
+wire sys_select = ~sys_addr[15] & sys_addr[14] & sys_addr[13];
+wire sys_write = sys_select & ~RW;
+
+wire [7:0] sys_data_out;
+assign sys_data_out_ = (sys_select & RW) ? sys_data_out : 8'hZZ;
 
 // Counter logic
 wire [8:0] pix;
@@ -37,15 +43,18 @@ assign cram_addr[12]   = pix[2]; // color info after half of character
 
 vga_char_ram cram (
 	// computer system port
-	.data(sys_data),				// input data
-	.wraddress(sys_addr[12:0]),	    // input address
-	.wren(select),				    // write enable
-	.wrclock(sys_clk),		        // write clock
+	.data_a(sys_data_in),				// input data
+	.q_a(sys_data_out),				// output data
+	.address_a(sys_addr[12:0]),	    // input address
+	.wren_a(sys_write),				    // write enable
+	.clock_a(sys_clk),		        // write clock
 	
 	// display side port
-	.q(cram_q),
-	.rdaddress(cram_addr),
-	.rdclock(clk_20MHz)
+	.data_b(8'h00),
+	.q_b(cram_q),
+	.address_b(cram_addr),
+	.wren_b(0),
+	.clock_b(clk_20MHz)
 );
 
 
