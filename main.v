@@ -1,214 +1,214 @@
-// Copyright (C) 2022  Intel Corporation. All rights reserved.
-// Your use of Intel Corporation's design tools, logic functions 
-// and other software and tools, and any partner logic 
-// functions, and any output files from any of the foregoing 
-// (including device programming or simulation files), and any 
-// associated documentation or information are expressly subject 
-// to the terms and conditions of the Intel Program License 
-// Subscription Agreement, the Intel Quartus Prime License Agreement,
-// the Intel FPGA IP License Agreement, or other applicable license
-// agreement, including, without limitation, that your use is for
-// the sole purpose of programming logic devices manufactured by
-// Intel and sold by Intel or its authorized distributors.  Please
-// refer to the applicable agreement for further details, at
-// https://fpgasoftware.intel.com/eula.
-
-// PROGRAM		"Quartus Prime"
-// VERSION		"Version 21.1.1 Build 850 06/23/2022 SJ Lite Edition"
-// CREATED		"Sun Jun 11 22:54:04 2023"
-
 module main(
-	MAX10_CLK1_50,
-	KEY,
-	VGA_HS,
-	VGA_VS,
-	GPIO,
-	HEX0,
-	HEX1,
-	HEX2,
-	HEX3,
-	LEDR,
-	VGA_B,
-	VGA_G,
-	VGA_R
+	input wire MAX10_CLK1_50,
+	
+	input wire [1:0] KEY,
+	
+	// VGA connector
+	output wire VGA_HS,
+	output wire VGA_VS,
+	output wire [3:0] VGA_R,
+	output wire [3:0] VGA_G,
+	output wire [3:0] VGA_B,
+	
+	// GPIO header (PS/2 + UART)
+	inout wire [35:0] GPIO,
+	
+	// debug output
+	// hex digits (dbgu address counter)
+	output wire [7:0] HEX0,
+	output wire [7:0] HEX1,
+	output wire [7:0] HEX2,
+	output wire [7:0] HEX3,
+	
+	// PS/2 debug bits
+	output wire [9:0] LEDR
 );
 
+// ------------------------- IO CONFIG & CLOCKS ------------------------- //
+wire master_n_reset = KEY[0];
 
-input wire	MAX10_CLK1_50;
-input wire	[1:0] KEY;
-output wire	VGA_HS;
-output wire	VGA_VS;
-inout wire	[3:0] GPIO;
-output wire	[7:0] HEX0;
-output wire	[7:0] HEX1;
-output wire	[7:0] HEX2;
-output wire	[7:0] HEX3;
-output wire	[9:0] LEDR;
-output wire	[3:0] VGA_B;
-output wire	[3:0] VGA_G;
-output wire	[3:0] VGA_R;
+wire clk_vga;
+wire clk_uart;
 
-wire	[15:0] addr_bus;
-wire	[15:0] adr_ptr;
-wire	button_clk;
-wire	clk_uart;
-wire	cpu_clk;
-wire	cpu_irqb;
-wire	cpu_n_reset;
-wire	[7:0] data;
-wire	dbgu_cpu_clk;
-wire	dbgu_cpu_n_reset;
-wire	[7:0] gdfx_temp0;
-wire	master_n_reset;
-wire	RW;
-wire	uart_rx;
-wire	uart_tx;
-wire	[7:0] SYNTHESIZED_WIRE_0;
-wire	[7:0] SYNTHESIZED_WIRE_1;
-wire	[7:0] SYNTHESIZED_WIRE_2;
-wire	[15:0] SYNTHESIZED_WIRE_3;
-wire	[7:0] SYNTHESIZED_WIRE_4;
-wire	[7:0] SYNTHESIZED_WIRE_5;
-wire	[7:0] SYNTHESIZED_WIRE_6;
-wire	SYNTHESIZED_WIRE_16;
-wire	SYNTHESIZED_WIRE_9;
-wire	SYNTHESIZED_WIRE_10;
-wire	SYNTHESIZED_WIRE_17;
-wire	SYNTHESIZED_WIRE_18;
-wire	SYNTHESIZED_WIRE_15;
-
-assign	SYNTHESIZED_WIRE_16 = 0;
+// input: 50MHz
+// c0 --     20MHz (VGA)
+// c1 --      1MHz (CPU -- unused, cpu driven from dbgu)
+// c2 -- 3.6864MHz (UART source clock)
+pll	vga_pll(
+	.inclk0(MAX10_CLK1_50),
+	.c0(clk_vga),
+	
+	.c2(clk_uart));
 
 
+// UART
+wire uart_rx = GPIO[26];
+wire uart_tx;
+assign GPIO[27] = uart_tx;
 
+wire ps2_clk = GPIO[11];
+wire ps2_data = GPIO[10];
 
-CPU	b2v_CPU0(
-	.clk(cpu_clk),
-	.n_reset(cpu_n_reset),
-	.IRQB(cpu_irqb),
-	.data_bus_in(data),
-	.RW(RW),
-	.adr_bus(addr_bus),
-	.data_bus_out(data),
-	.dbg_A_val(SYNTHESIZED_WIRE_0),
-	.dbg_IR_val(SYNTHESIZED_WIRE_1),
-	.dbg_P_val(SYNTHESIZED_WIRE_2),
-	.dbg_PC_val(SYNTHESIZED_WIRE_3),
-	.dbg_S_val(SYNTHESIZED_WIRE_4),
-	.dbg_X_val(SYNTHESIZED_WIRE_5),
-	.dbg_Y_val(SYNTHESIZED_WIRE_6));
+// ------------------------- Debug unit ------------------------- //
 
-assign	cpu_clk = dbgu_cpu_clk | button_clk;
+wire dbgu_RW;
+wire [15:0] dbgu_addr_bus;
+wire [7:0] dbgu_data_bus;
+wire dbgu_mem_op;
 
-assign	cpu_n_reset = master_n_reset & dbgu_cpu_n_reset;
+wire [7:0] dbg_A_val;
+wire [7:0] dbg_IR_val;
+wire [7:0] dbg_P_val;
+wire [15:0] dbg_PC_val;
+wire [7:0] dbg_S_val;
+wire [7:0] dbg_X_val;
+wire [7:0] dbg_Y_val;
 
+wire dbgu_cpu_clk;
+wire dbgu_cpu_n_reset;
 
-dbgu	b2v_dbgu0(
+dbgu dbgu0(
 	.clk(clk_uart),
 	.n_reset(master_n_reset),
 	.rx(uart_rx),
-	.data_bus_in(gdfx_temp0),
-	.val_A(SYNTHESIZED_WIRE_0),
-	.val_IR(SYNTHESIZED_WIRE_1),
-	.val_P(SYNTHESIZED_WIRE_2),
-	.val_PC(SYNTHESIZED_WIRE_3),
-	.val_S(SYNTHESIZED_WIRE_4),
-	.val_X(SYNTHESIZED_WIRE_5),
-	.val_Y(SYNTHESIZED_WIRE_6),
 	.tx(uart_tx),
+	
+	// debug memory interface
+	.RW(dbgu_RW),
+	.adr_ptr(dbgu_addr_bus),
+	.data_bus_in(dbgu_data_bus),
+	.data_bus_out(dbgu_data_bus),
+	.mem_op(dbgu_mem_op),
+	
+	// debug CPU register read
+	.val_A(dbg_A_val),
+	.val_IR(dbg_IR_val),
+	.val_P(dbg_P_val),
+	.val_PC(dbg_PC_val),
+	.val_S(dbg_S_val),
+	.val_X(dbg_X_val),
+	.val_Y(dbg_Y_val),
+	
+	// debug CPU control
 	.cpu_clk(dbgu_cpu_clk),
-	.cpu_n_reset(dbgu_cpu_n_reset),
-	.RW(SYNTHESIZED_WIRE_18),
-	.mem_op(SYNTHESIZED_WIRE_17),
-	.adr_ptr(adr_ptr),
-	.data_bus_out(gdfx_temp0)
-	);
+	.cpu_n_reset(dbgu_cpu_n_reset)
+);
 
+// ------------------------- CPU ------------------------- //
 
-hex_decoder	b2v_hex_disp_0(
-	.dot(SYNTHESIZED_WIRE_16),
-	.data(adr_ptr[7:0]),
-	.disp_high(HEX1),
-	.disp_low(HEX0));
+wire cpu_clk = dbgu_cpu_clk;
+wire cpu_n_reset = master_n_reset & dbgu_cpu_n_reset;
 
+wire cpu_irqb;
 
-hex_decoder	b2v_hex_disp_1(
-	.dot(SYNTHESIZED_WIRE_16),
-	.data(adr_ptr[15:8]),
+wire cpu_RW;
+wire [15:0] cpu_addr_bus;
+wire [7:0] cpu_data_bus;
+
+CPU cpu0 (
+	// control signals
+	.clk(cpu_clk),
+	.n_reset(cpu_n_reset),
+	.IRQB(cpu_irqb),
+	
+	// memory bus signals
+	.RW(cpu_RW),
+	.adr_bus(cpu_addr_bus),
+	.data_bus_in(cpu_data_bus),
+	.data_bus_out(cpu_data_bus),
+	
+	// debug signals
+	.dbg_A_val(dbg_A_val),
+	.dbg_IR_val(dbg_IR_val),
+	.dbg_P_val(dbg_P_val),
+	.dbg_PC_val(dbg_PC_val),
+	.dbg_S_val(dbg_S_val),
+	.dbg_X_val(dbg_X_val),
+	.dbg_Y_val(dbg_Y_val)
+);
+
+// debug display of dbgu_addr_bus on HEX3..0
+hex_decoder	hex_disp_1(
+	.dot(0),
+	.data(dbgu_addr_bus[15:8]),
 	.disp_high(HEX3),
-	.disp_low(HEX2));
+	.disp_low(HEX2)
+);
 
+hex_decoder	hex_disp_0(
+	.dot(0),
+	.data(dbgu_addr_bus[7:0]),
+	.disp_high(HEX1),
+	.disp_low(HEX0)
+);
 
-assign	button_clk =  ~KEY[1];
-
-assign	SYNTHESIZED_WIRE_9 =  ~GPIO[2];
-
-assign	SYNTHESIZED_WIRE_10 =  ~GPIO[3];
-
-
-PS2	b2v_ps2(
-	.ps2_clk__(SYNTHESIZED_WIRE_9),
-	.ps2_data__(SYNTHESIZED_WIRE_10),
+PS2	ps2(
+	// external data input
+	.ps2_clk__(ps2_clk),
+	.ps2_data__(ps2_data),
+	
+	// clocking and reset
 	.clk(clk_uart),
 	.n_reset(master_n_reset),
-	.sys_adr(addr_bus),
+	    
+	// system bus
+	.sys_adr(cpu_addr_bus),
 	.sys_irq(cpu_irqb),
-	.dbg(LEDR),
-	.sys_data_out(data));
-
-
-RAM	b2v_ram0(
-	.mem_clk(cpu_clk),
-	.RW(RW),
-	.dbg_mem_op(SYNTHESIZED_WIRE_17),
-	.dbg_mem_clk(clk_uart),
-	.dbg_RW(SYNTHESIZED_WIRE_18),
-	.addr(addr_bus),
-	.data(data),
-	.dbg_addr(adr_ptr),
-	.dbg_data_in(gdfx_temp0),
+	.sys_data_out(cpu_data_bus),
 	
-	.dbg_data_out(gdfx_temp0));
+	.dbg(LEDR)
+);
 
 
-ROM	b2v_rom0(
+RAM	ram0(
 	.mem_clk(cpu_clk),
-	.dbg_mem_op(SYNTHESIZED_WIRE_17),
+	.RW(cpu_RW),
+	.addr(cpu_addr_bus),
+	.data(cpu_data_bus),
+	
+	// debug unit interface
 	.dbg_mem_clk(clk_uart),
-	.dbg_RW(SYNTHESIZED_WIRE_18),
-	.addr(addr_bus),
-	.dbg_addr(adr_ptr),
-	.dbg_data_in(gdfx_temp0),
-	.data(data),
-	.dbg_data_out(gdfx_temp0));
+	.dbg_RW(dbgu_RW),
+	.dbg_addr(dbgu_addr_bus),
+	.dbg_data_in(dbgu_data_bus),
+	.dbg_data_out(dbgu_data_bus),
+	.dbg_mem_op(dbgu_mem_op)
+);
 
 
-VGA	b2v_VGA0(
-	.clk_20MHz(SYNTHESIZED_WIRE_15),
+ROM	rom0(
+	.mem_clk(cpu_clk),
+	.addr(cpu_addr_bus),
+	.data(cpu_data_bus),
+	
+	// debug unit interface
+	.dbg_mem_clk(clk_uart),
+	.dbg_RW(dbgu_RW),
+	.dbg_addr(dbgu_addr_bus),
+	.dbg_data_in(dbgu_data_bus),	
+	.dbg_data_out(dbgu_data_bus),
+	.dbg_mem_op(dbgu_mem_op)
+);
+
+
+VGA	VGA0(
+	// clock & reset
+	.clk_20MHz(clk_vga),
 	.n_reset(master_n_reset),
+	
+	// cpu interface (read/write)
 	.sys_clk(cpu_clk),
-	.RW(RW),
-	.sys_addr(addr_bus),
-	.sys_data_in(data),
+	.RW(cpu_RW),
+	.sys_addr(cpu_addr_bus),
+	.sys_data_in(cpu_data_bus),
+	.sys_data_out_(cpu_data_bus),
+	
+	// external signals out
 	.h_sync(VGA_HS),
 	.v_sync(VGA_VS),
 	.B(VGA_B),
 	.G(VGA_G),
-	.R(VGA_R),
-	.sys_data_out_(data));
-
-
-pll	b2v_vga_pll(
-	.inclk0(MAX10_CLK1_50),
-	.c0(SYNTHESIZED_WIRE_15),
-	
-	.c2(clk_uart));
-
-assign	master_n_reset = KEY[0];
-assign	GPIO[0] = uart_tx;
-assign	GPIO[1] = uart_rx;
-assign	master_n_reset = KEY[0];
-assign	uart_rx = GPIO[1];
-assign	uart_tx = GPIO[0];
+	.R(VGA_R)
+);
 
 endmodule
